@@ -1,0 +1,26 @@
+ Display
+
+    - Make the Waterfall work
+    - Add command interface to GUI so it can control the daemon
+	- Check that we really tuned to the frequency we asked for
+	- make graphing auto-scaled, cache graph data
+	
+
+Calibration:
+	
+	- add gain, fft-size, window to calibration data
+	- need to add name/device to config normalisation
+	- allow filtering of RFI (needs storage & mgmt)
+
+	
+
+Need some way to calibrate the noise level of the system too. Thinking a
+mode to be put in from the GUI - so the process becomes:
+
+    - User runs GUI
+    - place 50R connector at antenna end
+    - Selects config options/toolbar/whatever
+    - Send message to daemon that it should start sampling to calibrate
+    - set a timer going on the UI (6 mins)
+    - average and create noise floor to subtract from all incoming readings
+    - get out of calibrate mode
