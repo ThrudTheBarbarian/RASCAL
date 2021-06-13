@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
 	\**************************************************************************/
 	QCoreApplication::setOrganizationName(ORG_NAME);
 	QCoreApplication::setOrganizationDomain(ORG_DOMAIN);
-	QCoreApplication::setApplicationName(APP_NAME);
-	QCoreApplication::setApplicationVersion(APP_VERSION);
+	QCoreApplication::setApplicationName(DAEMON_NAME);
+	QCoreApplication::setApplicationVersion(DAEMON_VERSION);
 
 	/**************************************************************************\
 	|* Set up the configuration from both settings and commandline

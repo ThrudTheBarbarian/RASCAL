@@ -107,7 +107,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 Config::Config()
 	   :_listAll(false)
 	{
-	_parser.setApplicationDescription("Seti scanning daemon");
+	_parser.setApplicationDescription("RASCAL daemon");
 	_parser.addOption(*_antenna);
 	_parser.addOption(*_driverFilter);
 	_parser.addOption(*_idFilter);

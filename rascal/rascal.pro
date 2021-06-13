@@ -15,20 +15,24 @@ INCLUDEPATH += \
         /usr/local/include
 
 SOURCES += \
+    classes/config.cc \
     classes/events.cc \
     classes/graph.cc \
     classes/limiters.cc \
     classes/mainwindow.cc \
+    classes/msgio.cc \
     classes/sky.cc \
     classes/vcr.cc \
     classes/waterfall.cc \
     main.cc \
 
 HEADERS += \
+    classes/config.h \
     classes/events.h \
     classes/graph.h \
     classes/limiters.h \
     classes/mainwindow.h \
+    classes/msgio.h \
     classes/sky.h \
     classes/vcr.h \
     classes/waterfall.h
