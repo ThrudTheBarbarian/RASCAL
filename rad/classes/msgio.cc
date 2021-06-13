@@ -8,7 +8,7 @@
 /******************************************************************************\
 |* Categorised logging support
 \******************************************************************************/
-Q_LOGGING_CATEGORY(log_net, "seti.net   ")
+Q_LOGGING_CATEGORY(log_net, "rascal.net   ")
 
 #define LOG qDebug(log_net) << QTime::currentTime().toString("hh:mm:ss.zzz")
 #define ERR qCritical(log_net) << QTime::currentTime().toString("hh:mm:ss.zzz")

@@ -9,7 +9,7 @@
 /******************************************************************************\
 |* Categorised logging support
 \******************************************************************************/
-Q_LOGGING_CATEGORY(log_data, "seti.data  ")
+Q_LOGGING_CATEGORY(log_data, "rascal.data  ")
 
 #define LOG qDebug(log_data) << QTime::currentTime().toString("hh:mm:ss.zzz")
 #define ERR qCritical(log_data) << QTime::currentTime().toString("hh:mm:ss.zzz")

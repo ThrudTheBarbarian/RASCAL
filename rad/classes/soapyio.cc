@@ -15,7 +15,7 @@
 /******************************************************************************\
 |* Categorised logging support
 \******************************************************************************/
-Q_LOGGING_CATEGORY(log_dsp, "seti.dsp   ")
+Q_LOGGING_CATEGORY(log_dsp, "rascal.dsp   ")
 
 #define LOG  qDebug(log_dsp) << QTime::currentTime().toString("hh:mm:ss.zzz")
 #define WARN qWarning(log_dsp) << QTime::currentTime().toString("hh:mm:ss.zzz")
