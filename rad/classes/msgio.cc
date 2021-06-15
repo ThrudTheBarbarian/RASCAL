@@ -1,8 +1,8 @@
 #include <QtWebSockets>
 #include <QWebSocketServer>
 
-#include "constants.h"
-#include "datamgr.h"
+#include <libra.h>
+
 #include "msgio.h"
 
 /******************************************************************************\

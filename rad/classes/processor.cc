@@ -2,9 +2,9 @@
 
 #include <QThreadPool>
 
+#include <libra.h>
+
 #include "config.h"
-#include "constants.h"
-#include "datamgr.h"
 #include "fftaggregator.h"
 #include "msgio.h"
 #include "processor.h"

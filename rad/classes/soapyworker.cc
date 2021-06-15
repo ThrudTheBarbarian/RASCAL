@@ -2,8 +2,8 @@
 
 #include <SoapySDR/Device.hpp>
 
-#include "constants.h"
-#include "datamgr.h"
+#include <libra.h>
+
 #include "soapyio.h"
 #include "soapyworker.h"
 
