@@ -18,23 +18,6 @@ class MsgIO: public QObject
 		/**********************************************************************\
 		|* Typedefs and enums
 		\**********************************************************************/
-		struct SampleHeader
-			{
-			uint16_t order;
-			uint16_t offset;
-			uint32_t extent;
-			uint16_t type;
-			uint16_t flags;
-
-			SampleHeader(void)
-				{
-				order	= 0xAA55;
-				offset	= sizeof(SampleHeader);
-				extent	= 0;
-				type	= 0;
-				flags	= 0;
-				}
-			};
 
 	private:
 		/**********************************************************************\

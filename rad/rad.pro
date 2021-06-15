@@ -35,10 +35,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    ../shared/include/constants.h \
-    ../shared/include/properties.h \
-    ../shared/include/singleton.h \
-    ../shared/include/testable.h \
     classes/config.h \
     classes/fftaggregator.h \
     classes/msgio.h \

@@ -25,6 +25,7 @@ HEADERS += \
     datablock.h \
     datamgr.h \
     libra.h \
+    preamble.h \
     properties.h \
     singleton.h \
     testable.h

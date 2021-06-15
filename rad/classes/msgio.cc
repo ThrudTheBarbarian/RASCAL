@@ -117,7 +117,7 @@ void MsgIO::newData(FFTAggregator::DataType type, int64_t bufferId)
 	size_t extent	= dmgr.extent(bufferId);
 	uint8_t *src	= dmgr.asUint8(bufferId);
 
-	int dstId		= dmgr.blockFor(extent+sizeof(SampleHeader));
+	int dstId		= dmgr.blockFor(extent+sizeof(Preamble));
 	char *dst		= reinterpret_cast<char *>(dmgr.asUint8(dstId));
 
 	if ((src == nullptr) || (dst == nullptr))
@@ -126,14 +126,14 @@ void MsgIO::newData(FFTAggregator::DataType type, int64_t bufferId)
 		}
 	else
 		{
-		SampleHeader hdr;
+		Preamble hdr;
 		hdr.extent	= (uint32_t)extent;
 		hdr.type	= (uint16_t)type;
-		memcpy(dst, &hdr, sizeof(SampleHeader));
-		memcpy(dst+sizeof(SampleHeader), src, extent);
+		memcpy(dst, &hdr, sizeof(Preamble));
+		memcpy(dst+sizeof(Preamble), src, extent);
 
 		const char * buffer = const_cast<char *>(dst);
-		QByteArray msg(buffer, extent + sizeof(SampleHeader));
+		QByteArray msg(buffer, extent + sizeof(Preamble));
 		for (QWebSocket *client : qAsConst(_clients))
 			client->sendBinaryMessage(msg);
 
