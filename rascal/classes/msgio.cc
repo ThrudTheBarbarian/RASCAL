@@ -1,7 +1,9 @@
-#include "constants.h"
+#include <libra.h>
+
 #include "msgio.h"
 
 #define LOG qDebug(log_gui) << QTime::currentTime().toString("hh:mm:ss.zzz")
+#define ERR qCritical(log_gui) << QTime::currentTime().toString("hh:mm:ss.zzz")
 
 /******************************************************************************\
 |* Constructor
@@ -75,7 +77,49 @@ void Msgio::onTextMessageReceived(const QString msg)
 	LOG << "Got text message " << msg;
 	}
 
+/******************************************************************************\
+|* Handle binary data
+\******************************************************************************/
 void Msgio::onBinaryMessageReceived(const QByteArray &msg)
 	{
-	LOG << "Got binary message of size " << msg.size();
+	char * ptr = const_cast<char *>(msg.data());
+	Preamble *hdr = reinterpret_cast<Preamble*>(ptr);
+	if (hdr == nullptr)
+		{
+		ERR << "Somehow managed to get a nil pointer to the byte array!";
+		exit(-1);
+		}
+
+	if (hdr->isByteSwapped())
+		{
+		ERR << "Unimplemented: need to byte-swap incoming message data";
+		return;
+		}
+
+	DataMgr& dmgr		= DataMgr::instance();
+	int block			= dmgr.blockFor(hdr->extent);
+	uint8_t *dst		= dmgr.asUint8(block);
+	if (dst != nullptr)
+		{
+		memcpy(dst, ptr + hdr->offset, hdr->extent);
+		switch (hdr->type)
+			{
+			case TYPE_UPDATE:
+				LOG << "Update";
+				dmgr.release(block);
+				break;
+
+			case TYPE_SAMPLE:
+				LOG << "Sample";
+				dmgr.release(block);
+				break;
+
+			default:
+				LOG << "Uh ?";
+				dmgr.release(block);
+				break;
+			}
+		}
+	else
+		ERR << "Cannot get data for block " << block;
 	}

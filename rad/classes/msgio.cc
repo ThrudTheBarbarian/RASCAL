@@ -110,7 +110,7 @@ void MsgIO::socketDisconnected(void)
 /******************************************************************************\
 |* We have new smoothed data, send it off to all the clients
 \******************************************************************************/
-void MsgIO::newData(FFTAggregator::DataType type, int64_t bufferId)
+void MsgIO::newData(PreambleType type, int64_t bufferId)
 	{
 	DataMgr &dmgr	= DataMgr::instance();
 

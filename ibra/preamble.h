@@ -3,6 +3,16 @@
 
 #include <stdint.h>
 
+/**********************************************************************\
+|* Enums and Typedefs
+\**********************************************************************/
+typedef enum
+	{
+	TYPE_NONE	= 0,
+	TYPE_UPDATE,
+	TYPE_SAMPLE
+	} PreambleType;
+
 struct Preamble
 	{
 	uint16_t order;

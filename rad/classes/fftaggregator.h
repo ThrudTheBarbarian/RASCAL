@@ -4,22 +4,13 @@
 #include <QMutexLocker>
 #include <QObject>
 
-#include "properties.h"
+#include <libra.h>
 
 class FFTAggregator : public QObject
 	{
 	Q_OBJECT
 
 	public:
-		/**********************************************************************\
-		|* Enums and Typedefs
-		\**********************************************************************/
-		typedef enum
-			{
-			TYPE_NONE	= 0,
-			TYPE_UPDATE,
-			TYPE_SAMPLE
-			} DataType;
 
 	/**************************************************************************\
 	|* Properties
@@ -51,7 +42,7 @@ class FFTAggregator : public QObject
 		/**********************************************************************\
 		|* Tell the world we have new data it might want to use
 		\**********************************************************************/
-		void aggregatedDataReady(DataType type, int buffer);
+		void aggregatedDataReady(PreambleType type, int buffer);
 
 	public:
 		/**********************************************************************\

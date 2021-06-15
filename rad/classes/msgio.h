@@ -8,7 +8,7 @@
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
 QT_FORWARD_DECLARE_CLASS(QWebSocket)
 
-#include "fftaggregator.h"
+#include <libra.h>
 
 class MsgIO: public QObject
 	{
@@ -52,7 +52,7 @@ class MsgIO: public QObject
 		/**********************************************************************\
 		|* Receive data ready to send out, from the aggregator
 		\**********************************************************************/
-		void newData(FFTAggregator::DataType type, int64_t bufferId);
+		void newData(PreambleType type, int64_t bufferId);
 
 	};
 

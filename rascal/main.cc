@@ -1,8 +1,8 @@
 #include <QApplication>
 
+#include <libra.h>
 
 #include "config.h"
-#include "constants.h"
 #include "mainwindow.h"
 #include "msgio.h"
 
@@ -19,6 +19,11 @@ int main(int argc, char *argv[])
 	QCoreApplication::setOrganizationDomain(ORG_DOMAIN);
 	QCoreApplication::setApplicationName(RASCAL_NAME);
 	QCoreApplication::setApplicationVersion(RASCAL_VERSION);
+
+	/**************************************************************************\
+	|* Set up the datablock management
+	\**************************************************************************/
+	DataMgr::instance();
 
 	/**************************************************************************\
 	|* Set up the configuration from both settings and commandline

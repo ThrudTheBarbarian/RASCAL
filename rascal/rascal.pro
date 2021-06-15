@@ -37,6 +37,11 @@ HEADERS += \
     classes/vcr.h \
     classes/waterfall.h
 
+LIBS += \
+        -L/usr/local/lib \
+		-lfftw3 \
+
+
 FORMS += \
     forms/mainwindow.ui \
 
