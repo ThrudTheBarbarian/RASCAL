@@ -270,12 +270,14 @@ bool SoapyIO::isUnsignedStream(void)
 	return false;
 	}
 
-int SoapyIO::sampleBytes(void)
+/******************************************************************************\
+|* Return the number of bytes in a value within a sample
+\******************************************************************************/
+int SoapyIO::sampleValueBytes(void)
 	{
 	int isComplex = isComplexStream();
 	int idx = (isComplex) ? 2 : 1;
 	int bits = _format.mid(idx).toInt();
-	bits = (isComplex) ? bits * 2 : bits;
 	return bits/8;
 	}
 

@@ -59,7 +59,11 @@ class Processor : public QObject
 		void init(SoapyIO *sio, MsgIO *mio);
 
 	public slots:
-		void dataReceived(int64_t handle, int samples, int max, int bytes);
+		void dataReceived(int64_t handle,
+						  int samples,
+						  int max,
+						  int bytes,
+						  bool isComplex);
 
 	};
 

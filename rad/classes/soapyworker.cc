@@ -47,8 +47,10 @@ void SoapyWorker::startSampling(void)
 	/**************************************************************************\
 	|* Obtain a sample buffer from the data manager
 	\**************************************************************************/
-	int64_t ping	= DataMgr::instance().blockFor(mtu, _sdr->sampleBytes());
-	int64_t pong	= DataMgr::instance().blockFor(mtu, _sdr->sampleBytes());
+	int complexFactor	= _sdr->isComplexStream() ? 2 : 1;
+	int occupancy		= _sdr->sampleValueBytes() * complexFactor;
+	int64_t ping		= DataMgr::instance().blockFor(mtu, occupancy);
+	int64_t pong		= DataMgr::instance().blockFor(mtu, occupancy);
 
 	void *pingBuffers[]		= {DataMgr::instance().asUint8(ping)};
 	void *pongBuffers[]		= {DataMgr::instance().asUint8(pong)};
@@ -72,7 +74,8 @@ void SoapyWorker::startSampling(void)
 			emit dataAvailable(isPing ? ping : pong,
 							   samples,
 							   _sdr->maxValue(),
-							   _sdr->sampleBytes());
+							   _sdr->sampleValueBytes(),
+							   _sdr->isComplexStream());
 
 		// Cycle around with the next buffer
 		isPing = !isPing;

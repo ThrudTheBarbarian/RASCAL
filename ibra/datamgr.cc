@@ -71,9 +71,13 @@ int DataMgr::blockFor(size_t size)
 		{
 		result = _handle ++;
 		DataBlock *block = new DataBlock(size);
-		block->retain();
-		_active[result] = block;
-		result = _active.size()-1;
+		if (block == nullptr)
+			result = -1;
+		else
+			{
+			block->retain();
+			_active[result] = block;
+			}
 		}
 
 	return result;

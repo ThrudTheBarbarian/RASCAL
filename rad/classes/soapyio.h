@@ -113,7 +113,7 @@ class SoapyIO : public QObject
 		bool isFloatStream(void);
 		bool isUnsignedStream(void);
 		bool isSignedStream(void);
-		int sampleBytes(void);
+		int sampleValueBytes(void);
 
 	signals:
 		/**********************************************************************\

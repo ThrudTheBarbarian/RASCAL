@@ -123,7 +123,8 @@ void MsgIO::newData(PreambleType type, int64_t bufferId)
 
 	if ((src == nullptr) || (dst == nullptr))
 		{
-		ERR << "Cannot get src(" << src <<") or dst(" << dst <<") in send";
+		ERR << "Cannot get src(" << src <<":" << bufferId
+			<< ") or dst(" << dst << ":" << dstId << ") in send";
 		}
 	else
 		{

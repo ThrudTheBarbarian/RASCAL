@@ -52,7 +52,11 @@ Processor::~Processor(void)
 /******************************************************************************\
 |* We got data back
 \******************************************************************************/
-void Processor::dataReceived(int64_t buffer, int samples, int max, int bytes)
+void Processor::dataReceived(int64_t buffer,
+							 int samples,
+							 int max,
+							 int bytes,
+							 bool isComplex)
 	{
 	DataMgr &dmgr	= DataMgr::instance();
 	int8_t * src8	= dmgr.asInt8(buffer);
@@ -61,15 +65,14 @@ void Processor::dataReceived(int64_t buffer, int samples, int max, int bytes)
 	double scale	= 1.0 / (double)max;
 
 	/**************************************************************************\
-	|* We expect complex (interleaved I,Q) data since we use the native format
-	|* of the device, so multiply samples by 2
+	|* A complex stream has 2x the data
 	\**************************************************************************/
-	samples *= 2;
+	int extent		= samples * (isComplex ? 2 : 1);
 
 	/**************************************************************************\
 	|* Convert the buffer to double values
 	\**************************************************************************/
-	for (int i=0; i<samples; i++)
+	for (int i=0; i<extent; i++)
 		*work++ = (bytes == 1) ? (*src8++) * scale : (*src16++) * scale;
 	work = dmgr.asDouble(_work);
 
@@ -77,14 +80,14 @@ void Processor::dataReceived(int64_t buffer, int samples, int max, int bytes)
 	|* There are three cases:
 	|* 1: The number of elems from before + this batch < fftSize
 	\**************************************************************************/
-	if (_previous.size() + samples < _fftSize*2)
+	if (_previous.size() + extent < _fftSize*2)
 		{
-		for (int i=0; i<samples; i++)
+		for (int i=0; i<extent; i++)
 			_previous.enqueue(work[i]);
 		}
 	else
 		{
-		while (samples > _fftSize*2)
+		while (extent > _fftSize*2)
 			{
 			TaskFFT *task = nullptr;
 
@@ -98,7 +101,7 @@ void Processor::dataReceived(int64_t buffer, int samples, int max, int bytes)
 								   work,
 								   _fftSize * 2 - _previous.size());
 
-				samples -= _previous.size();
+				extent -= _previous.size();
 				work += _fftSize * 2 - _previous.size();
 				_previous.clear();
 				}
@@ -110,7 +113,7 @@ void Processor::dataReceived(int64_t buffer, int samples, int max, int bytes)
 				task = new TaskFFT(work, _fftSize*2);
 
 				work += _fftSize*2;
-				samples -= _fftSize*2;
+				extent -= _fftSize*2;
 				}
 
 			connect(task, &TaskFFT::fftDone,
@@ -125,9 +128,9 @@ void Processor::dataReceived(int64_t buffer, int samples, int max, int bytes)
 		/**********************************************************************\
 		|* If any samples are left over, enqueue them for the next pass
 		\**********************************************************************/
-		if (samples > 0)
+		if (extent > 0)
 			{
-			for (int i=0; i<samples; i++)
+			for (int i=0; i<extent; i++)
 				_previous.enqueue(*work ++);
 			}
 		}
