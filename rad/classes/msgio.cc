@@ -108,7 +108,8 @@ void MsgIO::socketDisconnected(void)
 	}
 
 /******************************************************************************\
-|* We have new smoothed data, send it off to all the clients
+|* We have new smoothed data, send it off to all the clients. This comes in
+|* as a buffer of floats, _fftSize long
 \******************************************************************************/
 void MsgIO::newData(PreambleType type, int64_t bufferId)
 	{

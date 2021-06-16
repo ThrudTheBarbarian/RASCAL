@@ -18,7 +18,12 @@ class Waterfall : public QWidget
 		\**********************************************************************/
 		void paintEvent(QPaintEvent *event) override;
 
-	signals:
+
+	public slots:
+		/**********************************************************************\
+		|* Receive data ready to show on-screen
+		\**********************************************************************/
+		void updateReceived(int64_t bufferId);
 
 	};
 

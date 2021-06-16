@@ -106,7 +106,7 @@ void Msgio::onBinaryMessageReceived(const QByteArray &msg)
 			{
 			case TYPE_UPDATE:
 				LOG << "Update";
-				dmgr.release(block);
+				emit updateReceived(block);
 				break;
 
 			case TYPE_SAMPLE:

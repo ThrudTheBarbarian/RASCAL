@@ -100,15 +100,17 @@ void FFTAggregator::fftReady(int buffer)
 	if (QDateTime::currentMSecsSinceEpoch() >= _nextUpdate)
 		{
 		// Create copy of buffer and send to update thread
+		int64_t resultsId	= dmgr.blockFor(_fftSize, sizeof(float));
+		float *results		= dmgr.asFloat(resultsId);
+
 		for (int i=0; i<_fftSize; i++)
-			_updateData[i] /= _updatePasses;
+			results[i] = (float)(_updateData[i] / _updatePasses);
 
 		memset(_updateData, 0, _fftSize * sizeof(double));
 		_nextUpdate		= _deltaT(_updateSecs);
 		_updatePasses	= 0;
 
-		dmgr.retain(buffer);
-		emit aggregatedDataReady(TYPE_UPDATE, buffer);
+		emit aggregatedDataReady(TYPE_UPDATE, resultsId);
 		}
 
 	/**************************************************************************\
@@ -117,15 +119,17 @@ void FFTAggregator::fftReady(int buffer)
 	if (QDateTime::currentMSecsSinceEpoch() >= _nextSample)
 		{
 		// Create copy of buffer and send to update thread
+		int64_t resultsId	= dmgr.blockFor(_fftSize, sizeof(float));
+		float *results		= dmgr.asFloat(resultsId);
+
 		for (int i=0; i<_fftSize; i++)
-			_sampleData[i] /= _samplePasses;
+			results[i] = (float)(_sampleData[i] / _samplePasses);
 
 		memset(_sampleData, 0, _fftSize * sizeof(double));
 		_nextSample		= _deltaT(_sampleSecs);
 		_samplePasses	= 0;
 
-		dmgr.retain(buffer);
-		emit aggregatedDataReady(TYPE_SAMPLE, buffer);
+		emit aggregatedDataReady(TYPE_SAMPLE, resultsId);
 		}
 
 	dmgr.release(buffer);

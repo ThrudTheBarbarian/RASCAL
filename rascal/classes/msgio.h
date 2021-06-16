@@ -13,6 +13,28 @@ class Msgio : public QObject
 	{
 	Q_OBJECT
 
+	public:
+		/**********************************************************************\
+		|* Typedefs and enums
+		\**********************************************************************/
+		struct SampleHeader
+			{
+			uint16_t order;
+			uint16_t offset;
+			uint32_t extent;
+			uint16_t type;
+			uint16_t flags;
+
+			SampleHeader(void)
+				{
+				order	= 0xAA55;
+				offset	= sizeof(SampleHeader);
+				extent	= 0;
+				type	= 0;
+				flags	= 0;
+				}
+			};
+
 	/**************************************************************************\
 	|* Properties
 	\**************************************************************************/
@@ -38,8 +60,8 @@ class Msgio : public QObject
 		void closed();
 
 	signals:
-		void sampleReceived(int bufferId);
-		void updateReceived(int bufferId);
+		void sampleReceived(int64_t bufferId);
+		void updateReceived(int64_t bufferId);
 
 	};
 

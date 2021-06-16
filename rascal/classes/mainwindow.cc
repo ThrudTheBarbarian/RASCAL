@@ -7,6 +7,7 @@
 #include "events.h"
 #include "graph.h"
 #include "limiters.h"
+#include "msgio.h"
 #include "sky.h"
 #include "vcr.h"
 #include "waterfall.h"
@@ -24,7 +25,6 @@ MainWindow::MainWindow(Config *cfg, QWidget *parent)
 		   ,ui(new Ui::MainWindow)
 	{
 	ui->setupUi(this);\
-	_createUI();
 	}
 
 /******************************************************************************\
@@ -38,8 +38,9 @@ MainWindow::~MainWindow()
 /******************************************************************************\
 |* Programmatically create the UI
 \******************************************************************************/
-void MainWindow::_createUI(void)
+void MainWindow::createUI(Msgio *io)
 	{
+	_io			= io;
 	_events		= new Events(this);
 	_graph		= new Graph(this);
 	_limits		= new Limiters(this);
@@ -58,4 +59,10 @@ void MainWindow::_createUI(void)
 	QWidget *top = findChild<QWidget *>("top");
 	top->setLayout(grid);
 	setWindowTitle("RASCAL");
+
+	/**************************************************************************\
+	|* Connect up the data-flow from io->waterfall
+	\**************************************************************************/
+	connect(_io, &Msgio::updateReceived,
+			_waterfall, &Waterfall::updateReceived);
 	}
