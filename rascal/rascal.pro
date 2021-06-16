@@ -37,10 +37,6 @@ HEADERS += \
     classes/vcr.h \
     classes/waterfall.h
 
-LIBS += \
-        -L/usr/local/lib \
-		-lfftw3 \
-
 
 FORMS += \
     forms/mainwindow.ui \
@@ -62,3 +58,7 @@ else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../ibra
 else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../ibra/release/ibra.lib
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../ibra/debug/ibra.lib
 else:unix: PRE_TARGETDEPS += $$OUT_PWD/../ibra/libibra.a
+
+LIBS += \
+        -L/usr/local/lib \
+                -lfftw3 \
