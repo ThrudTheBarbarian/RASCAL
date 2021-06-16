@@ -52,8 +52,9 @@ int DataMgr::blockFor(size_t size)
 	int idx = 0;
 	for (DataBlock* block : _candidate)
 		{
-		if (block->size() >= size)
+		if (block->maxSize() >= size)
 			{
+			block->setSize(size);
 			result = _handle ++;
 			_active[result] = block;
 			_candidate.removeAt(idx);

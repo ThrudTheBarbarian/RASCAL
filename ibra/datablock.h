@@ -11,7 +11,8 @@ class DataBlock
 	/**************************************************************************\
 	|* Properties
 	\**************************************************************************/
-	GET(size_t, size);				// Size of the block in bytes
+	GETSET(size_t, size, Size);		// Size of the block in bytes
+	GET(size_t, maxSize);			// Max size of the block in bytes
 	GET(uint8_t *, data);			// Actual data block
 	GET(int, refs);					// Number of clients for this block
 	GET(bool, isValid);				// If the block is valid post construction

@@ -13,6 +13,7 @@
 \******************************************************************************/
 DataBlock::DataBlock(size_t size, bool isFFT)
 		  :_size(size)
+		  ,_maxSize(size)
 		  ,_data(nullptr)
 		  ,_refs(0)
 		  ,_isValid(false)
@@ -32,6 +33,7 @@ DataBlock::DataBlock(size_t size, bool isFFT)
 \******************************************************************************/
 DataBlock::DataBlock(size_t elements, size_t sizePerElement, bool isFFT)
 		  :_size(elements * sizePerElement)
+		  ,_maxSize(elements * sizePerElement)
 		  ,_data(nullptr)
 		  ,_refs(0)
 		  ,_isValid(false)
