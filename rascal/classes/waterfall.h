@@ -3,9 +3,30 @@
 
 #include <QWidget>
 
+#include "properties.h"
+
 class Waterfall : public QWidget
 	{
 	Q_OBJECT
+	/**************************************************************************\
+	|* Typedefs and enums
+	\**************************************************************************/
+	typedef QList<QColor>	ColourList;
+
+	/**************************************************************************\
+	|* Properties
+	\**************************************************************************/
+	GETSET(ColourList, gradient, Gradient);
+	GET(double, maxVal);
+	GET(double, minVal);
+	GET(bool, haveData);
+
+	private:
+		/**********************************************************************\
+		|* Return the Colour to use, interpolated between those in _gradient
+		\**********************************************************************/
+		QColor _getGradientColour(double at);
+
 
 	public:
 		/**********************************************************************\
