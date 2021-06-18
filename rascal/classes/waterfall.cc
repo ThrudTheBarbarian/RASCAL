@@ -38,7 +38,17 @@ static unsigned char __map [][3] =
 /******************************************************************************\
 |* Constructor
 \******************************************************************************/
-Waterfall::Waterfall(QWidget *parent) : QWidget(parent)
+Waterfall::Waterfall(QWidget *parent)
+		  :QWidget(parent)
+		  ,_redrawImage(true)
+		  ,_sampleSecs(300)
+		  ,_updateSecs(5)
+		  ,_updateMax(-MAXFLOAT)
+		  ,_updateMin(MAXFLOAT)
+		  ,_haveData(false)
+		  ,_binLo(-1)
+		  ,_binHi(-1)
+		  ,_img(nullptr)
 	{
 	/**************************************************************************\
 	|* Create the colour gradient
@@ -59,13 +69,20 @@ Waterfall::Waterfall(QWidget *parent) : QWidget(parent)
 void Waterfall::paintEvent(QPaintEvent *e)
 	{
 	Q_UNUSED(e);
-
 	QPainter qp(this);
-	for (int i=0; i<100; i++)
+
+	if (_img == nullptr)
 		{
-		QPen pen(_getGradientColour(((float)i)/100.0), 2, Qt::SolidLine);
-		qp.setPen(pen);
-		qp.drawLine(20, 10+2*i, 250, 10+2*i);
+		for (int i=0; i<100; i++)
+			{
+			QPen pen(_getGradientColour(((float)i)/100.0), 2, Qt::SolidLine);
+			qp.setPen(pen);
+			qp.drawLine(20, 10+2*i, 250, 10+2*i);
+			}
+		}
+	else
+		{
+		qp.drawImage(rect(), *_img);
 		}
 	}
 
@@ -77,17 +94,57 @@ void Waterfall::updateReceived(int64_t idx)
 	{
 	DataMgr& dmgr		= DataMgr::instance();
 	int num				= dmgr.extent(idx) / sizeof(float);
-	float *data			= dmgr.asFloat(idx);
+	float * data		= dmgr.asFloat(idx);
 
-	fprintf(stderr, "%7lld: %d floats (%p)\n", idx, num, data);
+	/**************************************************************************\
+	|* Now that we have an update, if we don't have the limits on the data to
+	|* process, set it to the size of the incoming data
+	\**************************************************************************/
+	if ((_binLo < 0) || (_binHi < 0))
+		{
+		_binLo	= 1;
+		_binHi	= num-1;
+		_binMax	= num;
+		}
+
+	/**************************************************************************\
+	|* Update the min/max range to include this data
+	\**************************************************************************/
+	for (int i=_binLo; i<_binHi; i++)
+		{
+		_updateMax = (_updateMax > data[i]) ? _updateMax : data[i];
+		_updateMin = (_updateMin < data[i]) ? _updateMin : data[i];
+		}
+
+	/**************************************************************************\
+	|* Update the backing data
+	\**************************************************************************/
+	_updates.insert(0, idx);
+	int limit = _sampleSecs / _updateSecs;
+	while (_updates.size() > limit)
+		{
+		int64_t last = _updates.last();
+		dmgr.release(last);
+		_updates.removeLast();
+		}
+
+	/**************************************************************************\
+	|* Update the backing image
+	\**************************************************************************/
+	_updateImage();
+
+	/**************************************************************************\
+	|* And issue a repaint
+	\**************************************************************************/
+	repaint();
 	}
 
 /******************************************************************************\
 |* Private Method - return a colour along the gradient
 \******************************************************************************/
-QColor Waterfall::_getGradientColour(double at)
+QColor Waterfall::_getGradientColour(float at)
 	{
-	double stepbase = 1.0/(_gradient.count()-1);
+	float stepbase = 1.0/(_gradient.count()-1);
 	int interval	= _gradient.count()-1;
 
 	/**************************************************************************\
@@ -100,7 +157,7 @@ QColor Waterfall::_getGradientColour(double at)
 			break;
 			}
 
-	double percent	= (at - stepbase * (interval-1)) / stepbase;
+	float percent	= (at - stepbase * (interval-1)) / stepbase;
 	QColor stt		= _gradient[interval];
 	QColor end		= _gradient[interval-1];
 	int r			= (int)(percent * stt.red()   + (1-percent) * end.red());
@@ -108,4 +165,66 @@ QColor Waterfall::_getGradientColour(double at)
 	int b			= (int)(percent * stt.blue()  + (1-percent) * end.blue());
 
 	return QColor::fromRgb(r,g,b);
+	}
+
+/******************************************************************************\
+|* Private Method - Update the backing image
+\******************************************************************************/
+void Waterfall::_updateImage(void)
+	{
+	DataMgr& dmgr		= DataMgr::instance();
+	int updates			= _sampleSecs / _updateSecs;
+
+	/**************************************************************************\
+	|* Check to see if we have an image, if not, create it
+	\**************************************************************************/
+	if (_img == nullptr)
+		{
+		int height	= size().height();
+		if (height  < updates + 1 + 32)
+			height  = updates + 1 + 32;
+
+		_img = new QImage(_binMax, height, QImage::Format_ARGB32);
+		}
+
+	/**************************************************************************\
+	|* Draw the background
+	\**************************************************************************/
+	QPainter painter(_img);
+	QRect bounds = _img->rect();
+	painter.fillRect(bounds, QColor::fromRgb(200,200,200));
+
+	/**************************************************************************\
+	|* Draw the updates
+	\**************************************************************************/
+	for (int i=0; i<_updates.size(); i++)
+		{
+		int idx		 = _updates.at(i);
+		float * data = dmgr.asFloat(idx);
+		if (data != nullptr)
+			{
+			float scale = 1.0f / (_updateMax - _updateMin);
+			fprintf(stderr, "Min: %f, max:%f, scale:%f\n", _updateMin, _updateMax, scale);
+			for (int j=_binLo; j<_binHi; j++)
+				{
+				float value = (data[j] - _updateMin) * scale;
+				fprintf(stderr, "[%f:%f] ", data[j],value);
+				QColor rgb = _getGradientColour(value);
+				painter.setPen(rgb);
+				painter.drawPoint(j,i);
+				}
+			fprintf(stderr, "\n\n");
+			}
+		}
+
+	/**************************************************************************\
+	|* Draw the white line to separate updates from samples
+	\**************************************************************************/
+	painter.setPen(QColor::fromRgb(255,255,255));
+	painter.drawLine(0, updates, _binMax, updates);
+
+	/**************************************************************************\
+	|* Draw the samples
+	\**************************************************************************/
+
 	}

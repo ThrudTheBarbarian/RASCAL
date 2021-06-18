@@ -5,6 +5,9 @@
 
 #include "properties.h"
 
+QT_FORWARD_DECLARE_CLASS(QImage)
+
+
 class Waterfall : public QWidget
 	{
 	Q_OBJECT
@@ -16,17 +19,34 @@ class Waterfall : public QWidget
 	/**************************************************************************\
 	|* Properties
 	\**************************************************************************/
-	GETSET(ColourList, gradient, Gradient);
-	GET(double, maxVal);
-	GET(double, minVal);
-	GET(bool, haveData);
+	GETSET(ColourList, gradient, Gradient);		// Colour map to use
+	GETSET(bool, redrawImage, RedrawImage);		// Need to redraw  backing img?
+	GETSET(int, sampleSecs, SampleSecs);		// Seconds between samples
+	GETSET(int, updateSecs, UpdateSecs);		// Seconds between updates
+	GET(double, updateMax);						// Max value in update data
+	GET(double, updateMin);						// Min value in update data
+	GET(bool, haveData);						// Can draw something
+	GET(int, binLo);							// Smallest bin number to show
+	GET(int, binHi);							// Largest bin number to show
+	GET(int, binMax);							// Largest bin available
 
 	private:
 		/**********************************************************************\
-		|* Return the Colour to use, interpolated between those in _gradient
+		|* Return the Colour to use, interpolate those in _gradient
 		\**********************************************************************/
-		QColor _getGradientColour(double at);
+		QColor _getGradientColour(float at);
 
+		/**********************************************************************\
+		|* Update the image from the backing data
+		\**********************************************************************/
+		void _updateImage(void);
+
+		/**********************************************************************\
+		|* Variables
+		\**********************************************************************/
+		QImage *_img;							// The backing image
+		QVector<int64_t> _updates;				// The backing 'update' data
+		QVector<int64_t> _samples;				// The backing 'sample' data
 
 	public:
 		/**********************************************************************\

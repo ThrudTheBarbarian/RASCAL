@@ -131,8 +131,8 @@ void MsgIO::newData(PreambleType type, int64_t bufferId)
 		Preamble hdr;
 		hdr.extent	= (uint32_t)extent;
 		hdr.type	= (uint16_t)type;
-		memcpy(dst, &hdr, sizeof(Preamble));
-		memcpy(dst+sizeof(Preamble), src, extent);
+		::memcpy(dst, &hdr, sizeof(Preamble));
+		::memcpy(dst+sizeof(Preamble), src, extent);
 
 		const char * buffer = const_cast<char *>(dst);
 		QByteArray msg(buffer, extent + sizeof(Preamble));

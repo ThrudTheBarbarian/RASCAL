@@ -92,17 +92,20 @@ void Processor::dataReceived(int64_t buffer,
 			TaskFFT *task = nullptr;
 
 			/******************************************************************\
-			|* 2: There are entries left over from the last run
+			|* 2: There are entries left over from the last run. Add them in
+			|*    first, then fill up with the work buffer items
 			\******************************************************************/
 			if (_previous.size() > 0)
 				{
+				int workItems = _fftSize * 2 - _previous.size();
+
 				task = new TaskFFT(_previous.data(),
 								   _previous.size(),
 								   work,
-								   _fftSize * 2 - _previous.size());
+								   workItems);
 
-				extent -= _previous.size();
-				work += _fftSize * 2 - _previous.size();
+				extent -= workItems;
+				work   += workItems;
 				_previous.clear();
 				}
 			else
@@ -112,7 +115,7 @@ void Processor::dataReceived(int64_t buffer,
 				\**************************************************************/
 				task = new TaskFFT(work, _fftSize*2);
 
-				work += _fftSize*2;
+				work   += _fftSize*2;
 				extent -= _fftSize*2;
 				}
 
@@ -122,7 +125,6 @@ void Processor::dataReceived(int64_t buffer,
 			task->setPlan(_fftPlan);
 			task->setWindow(_window);
 			QThreadPool::globalInstance()->start(task);
-
 			}
 
 		/**********************************************************************\

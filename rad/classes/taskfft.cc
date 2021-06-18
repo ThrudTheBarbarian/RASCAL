@@ -15,13 +15,16 @@ TaskFFT::TaskFFT(double *iq, int num)
 	{
 	Q_ASSERT(num % 2 == 0);
 
+	// Obtain two buffers, one for the I,Q inputs, one for outputs
 	DataMgr &dmgr		= DataMgr::instance();
-
 	_results			= dmgr.fftBlockFor(_numIQ);
-
 	_data				= dmgr.fftBlockFor(_numIQ);
+
+	// Copy the IQ data (_numIQ= number of complex doubles) to the input data
 	fftw_complex *data	= dmgr.asFFT(_data);
 	::memcpy(data, iq, _numIQ * sizeof(fftw_complex));
+
+	// Now have _numIQ complex-pairs stored into {_data}
 	}
 
 /******************************************************************************\
@@ -33,17 +36,20 @@ TaskFFT::TaskFFT(double *iq1, int num1, double *iq2, int num2)
 		,_data(-1)
 		,_results(-1)
 	{
+	// Obtain two buffers, one for the I,Q inputs, one for outputs
 	DataMgr &dmgr		= DataMgr::instance();
-
 	_results			= dmgr.fftBlockFor(_numIQ);
-
 	_data				= dmgr.fftBlockFor(_numIQ);
+
+	// Copy the IQ data (num1= number of doubles) to the input data start
 	fftw_complex *data	= dmgr.asFFT(_data);
+	::memcpy(data, iq1, num1*sizeof(double));
 
-	memcpy(data, iq1, num1*sizeof(double));
-
+	// Skip by num1/2 complex doubles, copy remainder of doubles
 	data += num1/2;
-	memcpy(data, iq2, num2*sizeof(double));
+	::memcpy(data, iq2, num2*sizeof(double));
+
+	// Now have _numIQ complex-pairs stored into {_data}
 	}
 
 /******************************************************************************\
