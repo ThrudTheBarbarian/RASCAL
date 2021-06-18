@@ -111,7 +111,7 @@ void Msgio::onBinaryMessageReceived(const QByteArray &msg)
 
 			case TYPE_SAMPLE:
 				LOG << "Sample";
-				dmgr.release(block);
+				emit sampleReceived(block);
 				break;
 
 			default:

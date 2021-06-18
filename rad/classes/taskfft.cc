@@ -24,7 +24,9 @@ TaskFFT::TaskFFT(double *iq, int num)
 	fftw_complex *data	= dmgr.asFFT(_data);
 	::memcpy(data, iq, _numIQ * sizeof(fftw_complex));
 
-	// Now have _numIQ complex-pairs stored into {_data}
+	// Now have _numIQ complex-pairs stored into {_data}. Rotate by Pi to
+	// re-center the data after FFT
+	_rotateByPi();
 	}
 
 /******************************************************************************\
@@ -49,7 +51,9 @@ TaskFFT::TaskFFT(double *iq1, int num1, double *iq2, int num2)
 	data += num1/2;
 	::memcpy(data, iq2, num2*sizeof(double));
 
-	// Now have _numIQ complex-pairs stored into {_data}
+	// Now have _numIQ complex-pairs stored into {_data}. Rotate by Pi to
+	// center the data after FFT
+	_rotateByPi();
 	}
 
 /******************************************************************************\
@@ -91,3 +95,26 @@ void TaskFFT::run(void)
 	\**********************************************************************/
 	emit fftDone(_results);
 	}
+
+
+/******************************************************************************\
+|* Stolen shamelessly from the rtl-power-fftw source code. The magic aligment
+|* happens here: we have to change the phase of each next complex sample by pi
+|* - this means that even numbered samples stay the same while odd numbered
+|* samples et multiplied by -1 (thus rotated by pi in complex plane).
+|*
+|* This gets us output spectrum shifted by half its size - just what we need
+|* to get the output right.
+\******************************************************************************/
+void TaskFFT::_rotateByPi(void)
+	{
+	DataMgr &dmgr		= DataMgr::instance();
+	fftw_complex *input	= dmgr.asFFT(_data);
+
+	for (int i=0; i<_numIQ; i+=2)
+		{
+		input[i][1] = - input[i][1];
+		input[i][0] = - input[i][0];
+		}
+	}
+

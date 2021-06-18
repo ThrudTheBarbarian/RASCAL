@@ -6,6 +6,10 @@
 
 #define LOG qDebug(log_gui) << QTime::currentTime().toString("hh:mm:ss.zzz")
 
+#define MAX_SAMPLES			(2048)
+#define SEPARATOR			(3)
+#define MIN_SAMPLES			(32)
+
 static unsigned char __map [][3] =
 	{	/* These values were originally calculated for a dynamic range of 180dB. */
 		{	255,	255,	255	},
@@ -45,6 +49,8 @@ Waterfall::Waterfall(QWidget *parent)
 		  ,_updateSecs(5)
 		  ,_updateMax(-MAXFLOAT)
 		  ,_updateMin(MAXFLOAT)
+		  ,_sampleMax(-MAXFLOAT)
+		  ,_sampleMin(MAXFLOAT)
 		  ,_haveData(false)
 		  ,_binLo(-1)
 		  ,_binHi(-1)
@@ -109,9 +115,14 @@ void Waterfall::updateReceived(int64_t idx)
 
 	/**************************************************************************\
 	|* Update the min/max range to include this data
-	\**************************************************************************/
+	\**************************************************************************/\
+	int center = num/2;
 	for (int i=_binLo; i<_binHi; i++)
 		{
+		// Ignore the DC peak
+		if ((i >= center-1) && (i <= center+1))
+			continue;
+
 		_updateMax = (_updateMax > data[i]) ? _updateMax : data[i];
 		_updateMin = (_updateMin < data[i]) ? _updateMin : data[i];
 		}
@@ -120,13 +131,78 @@ void Waterfall::updateReceived(int64_t idx)
 	|* Update the backing data
 	\**************************************************************************/
 	_updates.insert(0, idx);
-	int limit = _sampleSecs / _updateSecs;
+	int limit = _updatesHeight();
 	while (_updates.size() > limit)
 		{
 		int64_t last = _updates.last();
 		dmgr.release(last);
 		_updates.removeLast();
 		}
+
+	/**************************************************************************\
+	|* Update the backing image
+	\**************************************************************************/
+	_updateImage();
+
+	/**************************************************************************\
+	|* And issue a repaint
+	\**************************************************************************/
+	repaint();
+	}
+
+/******************************************************************************\
+|* We got a sample message
+\******************************************************************************/
+void Waterfall::sampleReceived(int64_t idx)
+	{
+	DataMgr& dmgr		= DataMgr::instance();
+	int num				= dmgr.extent(idx) / sizeof(float);
+	float * data		= dmgr.asFloat(idx);
+
+	/**************************************************************************\
+	|* Now that we have an update, if we don't have the limits on the data to
+	|* process, set it to the size of the incoming data
+	\**************************************************************************/
+	if ((_binLo < 0) || (_binHi < 0))
+		{
+		_binLo	= 1;
+		_binHi	= num-1;
+		_binMax	= num;
+		}
+
+	/**************************************************************************\
+	|* Update the min/max range to include this data
+	\**************************************************************************/\
+	int center = num/2;
+	for (int i=_binLo; i<_binHi; i++)
+		{
+		// Ignore the DC peak
+		if ((i >= center-1) && (i <= center+1))
+			continue;
+
+		_sampleMax = (_sampleMax > data[i]) ? _sampleMax : data[i];
+		_sampleMin = (_sampleMin < data[i]) ? _sampleMin : data[i];
+		}
+
+	/**************************************************************************\
+	|* Update the backing data
+	\**************************************************************************/
+	_samples.insert(0, idx);
+	while (_updates.size() > MAX_SAMPLES)
+		{
+		int64_t last = _samples.last();
+		dmgr.release(last);
+		_samples.removeLast();
+		}
+
+	/**************************************************************************\
+	|* Add a black line into the updates count, so we can tell where one sample
+	|* starts and another ends
+	\**************************************************************************/
+	int64_t bufId	= dmgr.blockFor(num, sizeof(float));
+	float *dummy	= dmgr.asFloat(bufId);
+	memset(dummy, 0, num*sizeof(float));
+	_updates.insert(0, bufId);
 
 	/**************************************************************************\
 	|* Update the backing image
@@ -164,6 +240,12 @@ QColor Waterfall::_getGradientColour(float at)
 	int g			= (int)(percent * stt.green() + (1-percent) * end.green());
 	int b			= (int)(percent * stt.blue()  + (1-percent) * end.blue());
 
+	// We can ask for out-of-range values due to scaling, so constrain to the
+	// correct 0..255 range
+	r				= (r < 0) ? 0 : (r > 255) ? 255 : r;
+	g				= (g < 0) ? 0 : (g > 255) ? 255 : g;
+	b				= (b < 0) ? 0 : (b > 255) ? 255 : b;
+
 	return QColor::fromRgb(r,g,b);
 	}
 
@@ -173,7 +255,7 @@ QColor Waterfall::_getGradientColour(float at)
 void Waterfall::_updateImage(void)
 	{
 	DataMgr& dmgr		= DataMgr::instance();
-	int updates			= _sampleSecs / _updateSecs;
+	int updates			= _updatesHeight();
 
 	/**************************************************************************\
 	|* Check to see if we have an image, if not, create it
@@ -181,8 +263,8 @@ void Waterfall::_updateImage(void)
 	if (_img == nullptr)
 		{
 		int height	= size().height();
-		if (height  < updates + 1 + 32)
-			height  = updates + 1 + 32;
+		if (height  < updates + SEPARATOR + MIN_SAMPLES)
+			height  = updates + SEPARATOR + MIN_SAMPLES;
 
 		_img = new QImage(_binMax, height, QImage::Format_ARGB32);
 		}
@@ -204,27 +286,54 @@ void Waterfall::_updateImage(void)
 		if (data != nullptr)
 			{
 			float scale = 1.0f / (_updateMax - _updateMin);
-			fprintf(stderr, "Min: %f, max:%f, scale:%f\n", _updateMin, _updateMax, scale);
 			for (int j=_binLo; j<_binHi; j++)
 				{
 				float value = (data[j] - _updateMin) * scale;
-				fprintf(stderr, "[%f:%f] ", data[j],value);
 				QColor rgb = _getGradientColour(value);
 				painter.setPen(rgb);
 				painter.drawPoint(j,i);
 				}
-			fprintf(stderr, "\n\n");
 			}
 		}
 
 	/**************************************************************************\
 	|* Draw the white line to separate updates from samples
 	\**************************************************************************/
-	painter.setPen(QColor::fromRgb(255,255,255));
+	QPen pen(QColor::fromRgb(255,255,255));
+	pen.setWidth(SEPARATOR);
+	painter.setPen(pen);
 	painter.drawLine(0, updates, _binMax, updates);
 
 	/**************************************************************************\
 	|* Draw the samples
 	\**************************************************************************/
+	int max = _img->rect().height() - updates - SEPARATOR;
+	max		= (max > MAX_SAMPLES) ? MAX_SAMPLES			: max;
+	max		= (max > _samples.size()) ? _samples.size() : max;
 
+	for (int i=0; i<max; i++)
+		{
+		int y		 = i + updates + SEPARATOR;
+		int idx		 = _samples.at(i);
+		float * data = dmgr.asFloat(idx);
+		if (data != nullptr)
+			{
+			float scale = 1.0f / (_sampleMax - _sampleMin);
+			for (int j=_binLo; j<_binHi; j++)
+				{
+				float value = (data[j] - _sampleMin) * scale;
+				QColor rgb = _getGradientColour(value);
+				painter.setPen(rgb);
+				painter.drawPoint(j,y);
+				}
+			}
+		}
+	}
+
+/******************************************************************************\
+|* Private Method - Return the height of the fast-flowing waterfall part
+\******************************************************************************/
+int Waterfall::_updatesHeight(void)
+	{
+	return 1 + _sampleSecs / _updateSecs;
 	}

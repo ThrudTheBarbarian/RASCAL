@@ -65,4 +65,6 @@ void MainWindow::createUI(Msgio *io)
 	\**************************************************************************/
 	connect(_io, &Msgio::updateReceived,
 			_waterfall, &Waterfall::updateReceived);
+	connect(_io, &Msgio::sampleReceived,
+			_waterfall, &Waterfall::sampleReceived);
 	}

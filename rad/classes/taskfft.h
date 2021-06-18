@@ -21,6 +21,19 @@ class TaskFFT : public QObject, public QRunnable
 	SET(fftw_plan, plan, Plan);				// FFT plan for fftw3
 	GETSET(int64_t, window, Window);		// Buffer: FFT windowing data
 
+	private:
+		/**********************************************************************\
+		|* Stolen shamelessly from the rtl-power-fftw source code. The magic
+		|* aligment happens here: we have to change the phase of each next
+		|* complex sample by pi - this means that even numbered samples stay
+		|* the same while odd numbered samples et multiplied by -1 (thus
+		|* rotated by pi in complex plane).
+		|*
+		|* This gets us output spectrum shifted by half its size - just what
+		|* we need to get the output right.
+		\**********************************************************************/
+		void _rotateByPi();
+
 	public:
 		/**********************************************************************\
 		|* Constructors and destructor

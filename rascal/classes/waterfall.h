@@ -23,8 +23,10 @@ class Waterfall : public QWidget
 	GETSET(bool, redrawImage, RedrawImage);		// Need to redraw  backing img?
 	GETSET(int, sampleSecs, SampleSecs);		// Seconds between samples
 	GETSET(int, updateSecs, UpdateSecs);		// Seconds between updates
-	GET(double, updateMax);						// Max value in update data
-	GET(double, updateMin);						// Min value in update data
+	GET(float, updateMax);						// Max value in update data
+	GET(float, updateMin);						// Min value in update data
+	GET(float, sampleMax);						// Max value in sample data
+	GET(float, sampleMin);						// Min value in sample data
 	GET(bool, haveData);						// Can draw something
 	GET(int, binLo);							// Smallest bin number to show
 	GET(int, binHi);							// Largest bin number to show
@@ -40,6 +42,11 @@ class Waterfall : public QWidget
 		|* Update the image from the backing data
 		\**********************************************************************/
 		void _updateImage(void);
+
+		/**********************************************************************\
+		|* Return the height of the fast-flowing waterfall part
+		\**********************************************************************/
+		int _updatesHeight(void);
 
 		/**********************************************************************\
 		|* Variables
@@ -65,6 +72,11 @@ class Waterfall : public QWidget
 		|* Receive data ready to show on-screen
 		\**********************************************************************/
 		void updateReceived(int64_t bufferId);
+
+		/**********************************************************************\
+		|* Receive data ready to show on-screen
+		\**********************************************************************/
+		void sampleReceived(int64_t bufferId);
 
 	};
 
