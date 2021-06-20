@@ -63,6 +63,16 @@ SourceMgr::SourceMgr(QObject *parent)
 			_showList("Frequencies (MHz)", "\n", "  ", info);
 			}
 
+		if (Config::instance().listSampleRates())
+			{
+			listed = true;
+			QList<SourceBase::Range> ranges = _src->listSampleRateRanges();
+			QList<QString> info;
+			for (SourceBase::Range& range : ranges)
+				info.append(QString("%1 -> %2").arg(range.from).arg(range.to));
+			_showList("Sample rates (MHz)", "\n", "  ", info);
+			}
+
 		if (Config::instance().listNativeFormat())
 			{
 			listed = true;
@@ -123,6 +133,8 @@ bool SourceMgr::initialiseSource(void)
 			ok = _src->setGain(Config::instance().gain());
 		if (ok)
 			ok = _src->setAntenna(Config::instance().antenna());
+		if (ok)
+			ok = _src->setBandwidth(Config::instance().bandwidth());
 		}
 
 	return ok;

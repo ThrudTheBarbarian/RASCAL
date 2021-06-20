@@ -16,6 +16,7 @@
 #define ID_KEY				"filter-id"
 #define ANTENNA_KEY			"antenna"
 
+#define BANDWIDTH_KEY		"bandwidth"
 #define FREQUENCY_KEY		"frequency"
 #define GAIN_KEY			"gain"
 #define SAMPLE_RATE_KEY		"sample-rate"
@@ -39,6 +40,9 @@ Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 		_antenna,
 		(ANTENNA_KEY, "Antenna to use (name or index)", "0"))
+Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
+		_bandwidth,
+		({"b", "bandwidth"}, "Tuner bandwidth to use", "-1"))
 Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 		_driverFilter,
 		(DRIVER_KEY, "Filter for the driver name", "sdrplay"))
@@ -109,6 +113,7 @@ Config::Config()
 	{
 	_parser.setApplicationDescription("RASCAL daemon");
 	_parser.addOption(*_antenna);
+	_parser.addOption(*_bandwidth);
 	_parser.addOption(*_driverFilter);
 	_parser.addOption(*_idFilter);
 	_parser.addOption(*_frequency);
@@ -228,7 +233,7 @@ int Config::radioIdFilter(void)
 	}
 
 /******************************************************************************\
-|* Get the time between samples
+|* Get the time between updates
 \******************************************************************************/
 double Config::secondsBetweenUpdates(void)
 	{
@@ -273,6 +278,21 @@ int Config::centerFrequency(void)
 	}
 
 /******************************************************************************\
+|* Get the bandwidth for the tuner
+\******************************************************************************/
+int Config::bandwidth(void)
+	{
+	if (_parser.isSet(*_bandwidth))
+		return _parser.value(*_bandwidth).toInt();
+
+	QSettings s;
+	s.beginGroup(RADIO_GROUP);
+	QString bw = s.value(BANDWIDTH_KEY, "-1").toString();
+	s.endGroup();
+	return bw.toInt();
+	}
+
+/******************************************************************************\
 |* Get the gain to apply
 \******************************************************************************/
 double Config::gain(void)
@@ -301,7 +321,6 @@ int Config::sampleRate(void)
 	s.endGroup();
 	return rate.toInt();
 	}
-
 
 /******************************************************************************\
 |* Get the fft-size

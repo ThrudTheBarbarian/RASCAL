@@ -62,6 +62,11 @@ class SourceRtlSdr : public SourceBase
 		virtual bool setAntenna(QString antenna);
 
 		/**********************************************************************\
+		|* Set the tuner bandwidth to use
+		\**********************************************************************/
+		virtual bool setBandwidth(int bandwidth);
+
+		/**********************************************************************\
 		|* Get a list of available antennas
 		\**********************************************************************/
 		virtual QList<QString> listAntennas(void);
@@ -85,6 +90,12 @@ class SourceRtlSdr : public SourceBase
 		|* Get a list of gains in dB
 		\**********************************************************************/
 		virtual QList<double> listGains(void);
+
+		/**********************************************************************\
+		|* Get the ranges within which you can sample via the ADC
+		\**********************************************************************/
+		virtual QList<SourceBase::Range> listSampleRateRanges(void);
+
 
 
 

@@ -90,6 +90,7 @@ bool SourceRtlSdr::setSampleRate(int sampleRate)
 		ERR << "Failed to set sample rate of  " << sampleRate;
 	else
 		{
+		sampleRate = rtlsdr_get_sample_rate(_dev);
 		LOG << name() << "sample rate is now" << sampleRate;
 		_sampleRate = sampleRate;
 		}
@@ -167,6 +168,63 @@ bool SourceRtlSdr::setGain(double gain)
 				LOG << name() << "gain now set to " << nVal;
 			}
 		}
+	return (ok >= 0);
+	}
+
+/******************************************************************************\
+|* Set the bandwidth for the tuner
+\******************************************************************************/
+bool SourceRtlSdr::setBandwidth(int requestedBw)
+	{
+	int ok = -1;
+
+	if (requestedBw < 0)
+		requestedBw = _sampleRate;
+	else
+		requestedBw *= 1000;
+	if (requestedBw > _sampleRate)
+		requestedBw = _sampleRate;
+
+
+	QList<QString> bandwidths = listBandwidths();
+	int count = bandwidths.size();
+	if (count <= 0)
+		{
+		ERR << "Cannot get list of bandwidths to use";
+		return false;
+		}
+
+	int bw[count];
+	memset(bw, 0, sizeof(int) * count);
+
+	int idx = 0;
+	for (QString &rep : bandwidths)
+		bw[idx++] = rep.toInt() * 1000;
+
+	int err1, err2;
+	int nearest = bw[0];
+
+	for (int i=0; i<count; i++)
+		{
+		err1 = abs(requestedBw - nearest);
+		err2 = abs(requestedBw - bw[i]);
+		if (err2 < err1)
+			nearest = bw[i];
+		}
+
+	double nVal = ((double)nearest);
+	double bVal = ((double)requestedBw);
+
+	if (nearest != requestedBw)
+		LOG << name()
+			<< "setting bandwidth to nearest value ["
+			<< (int)nVal << "] to " << (int)bVal;
+
+	ok = rtlsdr_set_tuner_bandwidth(_dev, nearest);
+	if (ok < 0)
+		ERR << "Failed to set gain to " << nVal;
+	else
+		LOG << name() << "bandwidth now set to " << (int)nVal;
 	return (ok >= 0);
 	}
 
@@ -274,8 +332,8 @@ QList<QString> SourceRtlSdr::listBandwidths(void)
 	list.append("1600");
 	list.append("1750");
 	list.append("1950");
-	list.append("3400");
-	list.append("8000");
+	list.append("2048");
+	list.append("2560");
 	return list;
 	}
 
@@ -286,6 +344,16 @@ QList<SourceBase::Range> SourceRtlSdr::listFrequencyRanges(void)
 	{
 	QList<SourceBase::Range> list;
 	list.append({.from=24, .to=1799});
+	return list;
+	}
+
+/******************************************************************************\
+|* Get a list of sample rates, in MHz
+\******************************************************************************/
+QList<SourceBase::Range> SourceRtlSdr::listSampleRateRanges(void)
+	{
+	QList<SourceBase::Range> list;
+	list.append({.from=0, .to=8});
 	return list;
 	}
 

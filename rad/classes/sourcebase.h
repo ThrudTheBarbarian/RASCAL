@@ -75,6 +75,11 @@ class SourceBase : public QObject
 		virtual bool setAntenna(QString antenna) = 0;
 
 		/**********************************************************************\
+		|* Set the tuner bandwidth to use
+		\**********************************************************************/
+		virtual bool setBandwidth(int bandwidth) = 0;
+
+		/**********************************************************************\
 		|* Get a list of available antennas
 		\**********************************************************************/
 		virtual QList<QString> listAntennas(void) = 0;
@@ -98,6 +103,11 @@ class SourceBase : public QObject
 		|* Get the number of channels in each direction
 		\**********************************************************************/
 		virtual ChannelInfo numberOfChannels(void) = 0;
+
+		/**********************************************************************\
+		|* Get the number of channels in each direction
+		\**********************************************************************/
+		virtual QList<SourceBase::Range> listSampleRateRanges(void) = 0;
 
 		/**********************************************************************\
 		|* Convenience method to return the name

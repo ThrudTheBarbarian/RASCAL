@@ -66,6 +66,11 @@ class Config : public Singleton<Config>
 		int sampleRate(void);
 
 		/******************************************************************\
+		|* Return the tuner bandwidth to use, -1 = use default for driver
+		\******************************************************************/
+		int bandwidth(void);
+
+		/******************************************************************\
 		|* Return the FFT size
 		\******************************************************************/
 		int fftSize(void);
