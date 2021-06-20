@@ -25,7 +25,7 @@
 /******************************************************************************\
 |* Logging
 \******************************************************************************/
-Q_DECLARE_LOGGING_CATEGORY(log_plugin)
+Q_DECLARE_LOGGING_CATEGORY(log_src)
 Q_DECLARE_LOGGING_CATEGORY(log_dsp)
 Q_DECLARE_LOGGING_CATEGORY(log_net)
 Q_DECLARE_LOGGING_CATEGORY(log_gui)

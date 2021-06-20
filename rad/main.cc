@@ -1,11 +1,12 @@
 #include <QCoreApplication>
+#include <SoapySDR/Logger.hpp>
 
 #include "config.h"
 #include "constants.h"
 #include "datamgr.h"
 #include "msgio.h"
 #include "processor.h"
-#include "soapyio.h"
+#include "sourcemgr.h"
 #include "tester.h"
 
 int main(int argc, char *argv[])
@@ -33,7 +34,15 @@ int main(int argc, char *argv[])
 	/**************************************************************************\
 	|* Set up the data stream
 	\**************************************************************************/
-	SoapyIO sio(&processor);
+	SourceMgr srcmgr;
+	if (!srcmgr.foundSource())
+		{
+		fprintf(stderr, "Cannot find source. Exiting\n");
+		exit(-1);
+		}
+	srcmgr.initialiseSource();
+
+	//SoapyIO sio(&processor);
 
 	/**************************************************************************\
 	|* Configure the message-io handler (websocket based)
@@ -48,12 +57,13 @@ int main(int argc, char *argv[])
 	/**************************************************************************\
 	|* Configure the processor
 	\**************************************************************************/
-	processor.init(&sio, &mio);
+	//processor.init(&sio, &mio);
 
 	/**************************************************************************\
 	|* Start streaming data in
 	\**************************************************************************/
-	sio.startWorker();
+	//sio.startWorker();
+	srcmgr.start(&processor);
 
 	return a.exec();
 	}

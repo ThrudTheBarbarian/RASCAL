@@ -9,9 +9,15 @@ CONFIG -= app_bundle
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 INCLUDEPATH += \
-        ../ibra \
-		classes \
-		/usr/local/include
+            ../ibra \
+            ../rtlsdr \
+            classes \
+            /usr/local/include
+
+macx {
+INCLUDEPATH += /usr/local/include/libusb-1.0 /usr/local/include
+LIBS += -L/usr/local/lib -lusb-1.0
+}
 
 SOURCES += \
         classes/config.cc \
@@ -20,9 +26,17 @@ SOURCES += \
         classes/processor.cc \
         classes/soapyio.cc \
         classes/soapyworker.cc \
+        classes/sourcemgr.cc \
+        classes/sourcertlsdr.cc \
         classes/taskfft.cc \
         classes/tester.cc \
-        main.cc
+        main.cc \
+        rtlsdr/librtlsdr.c \
+        rtlsdr/tuner_e4k.c \
+        rtlsdr/tuner_fc0012.c \
+        rtlsdr/tuner_fc0013.c \
+        rtlsdr/tuner_fc2580.c \
+        rtlsdr/tuner_r82xx.c
 
 LIBS += \
         -L/usr/local/lib \
@@ -41,8 +55,20 @@ HEADERS += \
     classes/processor.h \
     classes/soapyio.h \
     classes/soapyworker.h \
+    classes/sourcebase.h \
+    classes/sourcemgr.h \
+    classes/sourcertlsdr.h \
     classes/taskfft.h \
-    classes/tester.h
+    classes/tester.h \
+    rtlsdr/reg_field.h \
+    rtlsdr/rtl-sdr.h \
+    rtlsdr/rtl-sdr_export.h \
+    rtlsdr/rtlsdr_i2c.h \
+    rtlsdr/tuner_e4k.h \
+    rtlsdr/tuner_fc0012.h \
+    rtlsdr/tuner_fc0013.h \
+    rtlsdr/tuner_fc2580.h \
+    rtlsdr/tuner_r82xx.h
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../ibra/release/ -libra
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../ibra/debug/ -libra
