@@ -7,9 +7,10 @@
 #include <fftw3.h>
 #include "properties.h"
 
+#include "sourcebase.h"
+
 QT_FORWARD_DECLARE_CLASS(Config)
 QT_FORWARD_DECLARE_CLASS(FFTAggregator)
-QT_FORWARD_DECLARE_CLASS(SoapyIO)
 QT_FORWARD_DECLARE_CLASS(MsgIO)
 
 class Processor : public QObject
@@ -21,7 +22,6 @@ class Processor : public QObject
 		|* Private variables
 		\**********************************************************************/
 		Config&			_cfg;			// Configuration
-		SoapyIO *		_sio;			// IO object
 		MsgIO *			_mio;			// Websocket interface
 		int				_fftSize;		// Size of the FFT
 
@@ -56,14 +56,13 @@ class Processor : public QObject
 		/**********************************************************************\
 		|* Initialise with the data-stream params
 		\**********************************************************************/
-		void init(SoapyIO *sio, MsgIO *mio);
+		void init(MsgIO *mio);
 
 	public slots:
 		void dataReceived(int64_t handle,
 						  int samples,
 						  int max,
-						  int bytes,
-						  bool isComplex);
+						  SourceBase::StreamFormat fmt);
 
 	};
 

@@ -42,8 +42,6 @@ int main(int argc, char *argv[])
 		}
 	srcmgr.initialiseSource();
 
-	//SoapyIO sio(&processor);
-
 	/**************************************************************************\
 	|* Configure the message-io handler (websocket based)
 	\**************************************************************************/
@@ -57,12 +55,11 @@ int main(int argc, char *argv[])
 	/**************************************************************************\
 	|* Configure the processor
 	\**************************************************************************/
-	//processor.init(&sio, &mio);
+	processor.init(&mio);
 
 	/**************************************************************************\
 	|* Start streaming data in
 	\**************************************************************************/
-	//sio.startWorker();
 	srcmgr.start(&processor);
 
 	return a.exec();

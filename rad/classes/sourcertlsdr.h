@@ -7,7 +7,7 @@
 #include "sourcebase.h"
 #include "rtl-sdr.h"
 
-class SourceRtlSdr : public QObject, public SourceBase
+class SourceRtlSdr : public SourceBase
 	{
 	Q_OBJECT
 
@@ -21,7 +21,7 @@ class SourceRtlSdr : public QObject, public SourceBase
 		|* Private instance variables
 		\**********************************************************************/
 		rtlsdr_dev_t *		_dev;			// Device structure
-		int					_bufId;			// Buffer Id for IQ data
+		int64_t				_bufId;			// Buffer Id for IQ data
 		int					_sampleRate;	// Sampling frequency in Hz
 
 	public:
@@ -62,6 +62,16 @@ class SourceRtlSdr : public QObject, public SourceBase
 		virtual bool setAntenna(QString antenna);
 
 
+		/**********************************************************************\
+		|* Signal handler, has to be public to be invokable from 'C'
+		\**********************************************************************/
+		void _handleSignal(int signum);
+
+		/**********************************************************************\
+		|* Callback handler, has to be public to be invokable from 'C'
+		\**********************************************************************/
+		void _dataIncoming(uint8_t *data, uint32_t len);
+
 	public slots:
 		/**********************************************************************\
 		|* Start sampling from the source
@@ -72,13 +82,6 @@ class SourceRtlSdr : public QObject, public SourceBase
 		|* Stop sampling from the source
 		\**********************************************************************/
 		 virtual void stopSampling(void);
-
-
-	signals:
-		/**********************************************************************\
-		|* We have new data
-		\**********************************************************************/
-		virtual void dataAvailable(void);
 	};
 
 #endif // SOURCERTLSDR_H

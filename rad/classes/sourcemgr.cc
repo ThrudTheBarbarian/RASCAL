@@ -136,8 +136,7 @@ bool SourceMgr::start(Processor *processor)
 	if (_src != nullptr)
 		{
 		_thread = new QThread(this);
-		QObject *instance = dynamic_cast<QObject *>(_src);
-		instance->moveToThread(_thread);
+		_src->moveToThread(_thread);
 
 		connect(this, &SourceMgr::startSourceSampling,
 				_src, &SourceBase::startSampling);

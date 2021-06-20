@@ -195,6 +195,7 @@ bool SoapyIO::setGain(double gain)
 \******************************************************************************/
 void SoapyIO::startWorker(void)
 	{
+#if 0
 	if (_worker == nullptr)
 		{
 		_thread = new QThread(this);
@@ -215,6 +216,7 @@ void SoapyIO::startWorker(void)
 
 		emit startWorkerSampling();
 		}
+#endif
 	}
 
 /******************************************************************************\

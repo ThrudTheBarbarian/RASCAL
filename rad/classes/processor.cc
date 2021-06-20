@@ -23,7 +23,6 @@
 Processor::Processor(Config& cfg, QObject *parent)
 		  : QObject(parent)
 		  ,_cfg(cfg)
-		  ,_sio(nullptr)
 		  ,_fftSize(0)
 		  ,_work(-1)
 		  ,_fftIn(-1)
@@ -55,25 +54,41 @@ Processor::~Processor(void)
 void Processor::dataReceived(int64_t buffer,
 							 int samples,
 							 int max,
-							 int bytes,
-							 bool isComplex)
+							 SourceBase::StreamFormat fmt)
 	{
 	DataMgr &dmgr	= DataMgr::instance();
-	int8_t * src8	= dmgr.asInt8(buffer);
-	int16_t *src16	= dmgr.asInt16(buffer);
 	double *work	= dmgr.asDouble(_work);
 	double scale	= 1.0 / (double)max;
 
 	/**************************************************************************\
 	|* A complex stream has 2x the data
 	\**************************************************************************/
-	int extent		= samples * (isComplex ? 2 : 1);
+	int extent		= samples;
 
 	/**************************************************************************\
-	|* Convert the buffer to double values
+	|* Convert the incoming buffer to double values
 	\**************************************************************************/
-	for (int i=0; i<extent; i++)
-		*work++ = (bytes == 1) ? (*src8++) * scale : (*src16++) * scale;
+	switch (fmt)
+		{
+		case SourceBase::STREAM_S8C:
+			{
+			extent *= 2;
+			int8_t * src8 = dmgr.asInt8(buffer);
+			for (int i=0; i<extent; i++)
+				*work++ = (*src8++) * scale;
+			break;
+			}
+
+		case SourceBase::STREAM_S16C:
+			{
+			extent *= 2;
+			int16_t * src16 = dmgr.asInt16(buffer);
+			for (int i=0; i<extent; i++)
+				*work++ = (*src16++) * scale;
+			break;
+			}
+
+		}
 	work = dmgr.asDouble(_work);
 
 	/**************************************************************************\
@@ -144,9 +159,8 @@ void Processor::dataReceived(int64_t buffer,
 /******************************************************************************\
 |* Initialise
 \******************************************************************************/
-void Processor::init(SoapyIO *sio, MsgIO *mio)
+void Processor::init(MsgIO *mio)
 	{
-	_sio		= sio;
 	_mio		= mio;
 
 	/**************************************************************************\
@@ -196,7 +210,7 @@ void Processor::_allocate(void)
 
 	if (_work >= 0)
 		dmgr.release(_work);
-	_work	= dmgr.blockFor(Config::instance().sampleRate(), sizeof(double));
+	_work	= dmgr.blockFor(Config::instance().sampleRate()*2, sizeof(double));
 
 	if (_fftIn >= 0)
 		dmgr.release(_fftIn);

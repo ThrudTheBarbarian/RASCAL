@@ -1,5 +1,7 @@
 #include <signal.h>
 
+#include <QCoreApplication>
+
 #include "constants.h"
 #include "datamgr.h"
 #include "sourcemgr.h"
@@ -23,11 +25,12 @@ static SourceRtlSdr * _self;
 |* Constructor
 \******************************************************************************/
 SourceRtlSdr::SourceRtlSdr(QObject *parent)
-			 :QObject(parent)
+			 :SourceBase(parent)
 			 ,_isActive(false)
 			 ,_dev(nullptr)
 			 ,_sampleRate(0)
 	{
+	_self = this;
 	}
 
 /******************************************************************************\
@@ -218,4 +221,53 @@ void SourceRtlSdr::startSampling(void)
 		int extent = dmgr.extent(_bufId);
 		rtlsdr_read_async(_dev, rtlsdr_callback, this, 0, extent);
 		}
+	}
+
+/******************************************************************************\
+|* Stop sampling
+\******************************************************************************/
+void SourceRtlSdr::stopSampling(void)
+	{
+	_isActive = false;
+	rtlsdr_cancel_async(_dev);
+	}
+
+/******************************************************************************\
+|* Private method : callback for receiving data
+\******************************************************************************/
+static void rtlsdr_callback(uint8_t *buf, uint32_t len, void *ctx)
+	{
+	(void)ctx;
+	_self->_dataIncoming(buf, len);
+	}
+
+void SourceRtlSdr::_dataIncoming(uint8_t *srcData, uint32_t len)
+	{
+	DataMgr &dmgr	= DataMgr::instance();
+	int64_t bufId	= dmgr.blockFor(len);
+	uint8_t *data	= dmgr.asUint8(bufId);
+
+	memcpy(data, srcData, len);
+	emit dataAvailable(bufId, len/2, 128, STREAM_S8C);
+	}
+
+
+/******************************************************************************\
+|* Private method : signal handling
+\******************************************************************************/
+static void _sighandler(int signum)
+	{
+	_self->_handleSignal(signum);
+	}
+
+void SourceRtlSdr::_handleSignal(int signum)
+	{
+	fprintf(stderr, "Signal %d caught, exiting!\n", signum);
+	if (_isActive)
+		{
+		rtlsdr_cancel_async(_dev);
+		qApp->quit();
+		}
+	else
+		exit(0);
 	}

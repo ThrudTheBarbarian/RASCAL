@@ -1,10 +1,13 @@
 #ifndef SOURCEBASE_H
 #define SOURCEBASE_H
 
+#include <QObject>
 #include <QString>
 
-class SourceBase
+class SourceBase : public QObject
 	{
+	Q_OBJECT
+
 	public:
 		/**********************************************************************\
 		|* typedefs and enums
@@ -25,7 +28,8 @@ class SourceBase
 		/**********************************************************************\
 		|* Destructor
 		\**********************************************************************/
-		virtual ~SourceBase(void)	{};
+		explicit SourceBase(QObject *parent = nullptr) : QObject(parent) {};
+		virtual ~SourceBase(void) {};
 
 		/**********************************************************************\
 		|* Return the information on how this source reports data
@@ -100,7 +104,10 @@ class SourceBase
 		/**********************************************************************\
 		|* We have new data
 		\**********************************************************************/
-		virtual void dataAvailable(void) = 0;
+		void dataAvailable(int64_t bufId,
+						   int samples,
+						   int max,
+						   StreamFormat fmt);
 
 	};
 
