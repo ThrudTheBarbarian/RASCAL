@@ -47,6 +47,7 @@ SourceBase::StreamInfo SourceRtlSdr::streamInfo(void)
 	{
 	StreamInfo info;
 	info.format = STREAM_S8C;
+	info.max	= 128;
 	info.name	= "rtlsdr";
 	info.mode	= "";
 	return info;
@@ -151,8 +152,8 @@ bool SourceRtlSdr::setGain(double gain)
 					nearest = gains[i];
 				}
 
-			double nVal = ((double)nearest) / 10.0f;
-			double gVal = ((double)gain) / 10.0f;
+			double nVal = ((double)nearest);
+			double gVal = ((double)gain);
 
 			if (nearest != gain)
 				LOG << name()
@@ -224,12 +225,94 @@ void SourceRtlSdr::startSampling(void)
 	}
 
 /******************************************************************************\
-|* Stop sampling
+|* Stop sampling : FIXME - this probably doesn't actually work...
 \******************************************************************************/
 void SourceRtlSdr::stopSampling(void)
 	{
 	_isActive = false;
 	rtlsdr_cancel_async(_dev);
+	}
+
+
+/******************************************************************************\
+|* Get a list of antennas - there's only one on an RTL-SDR
+\******************************************************************************/
+QList<QString> SourceRtlSdr::listAntennas(void)
+	{
+	QList<QString> list;
+	list.append("RX");
+	return list;
+	}
+
+/******************************************************************************\
+|* Get the number of channels in each direction - only 1 RX on RTL-SDR
+\******************************************************************************/
+SourceBase::ChannelInfo SourceRtlSdr::numberOfChannels(void)
+	{
+	SourceBase::ChannelInfo info;
+	info.rx = 1;
+	info.tx = 0;
+	return info;
+	}
+
+/******************************************************************************\
+|* Get a list of available bandwidth settings, in kHz
+\******************************************************************************/
+QList<QString> SourceRtlSdr::listBandwidths(void)
+	{
+	QList<QString> list;
+	list.append("290");
+	list.append("375");
+	list.append("420");
+	list.append("470");
+	list.append("600");
+	list.append("860");
+	list.append("950");
+	list.append("1100");
+	list.append("1300");
+	list.append("1500");
+	list.append("1600");
+	list.append("1750");
+	list.append("1950");
+	list.append("3400");
+	list.append("8000");
+	return list;
+	}
+
+/******************************************************************************\
+|* Get a list of frequency ranges, in MHz
+\******************************************************************************/
+QList<SourceBase::Range> SourceRtlSdr::listFrequencyRanges(void)
+	{
+	QList<SourceBase::Range> list;
+	list.append({.from=24, .to=1799});
+	return list;
+	}
+
+
+/******************************************************************************\
+|* Get a list of available gains, in dB
+\******************************************************************************/
+QList<double> SourceRtlSdr::listGains(void)
+	{
+	QList<double> list;
+
+	int count = rtlsdr_get_tuner_gains(_dev, NULL);
+	if (count <= 0)
+		ERR << "Cannot get list of gains from tuner";
+	else
+		{
+		int *gains = new int[count];
+		count = rtlsdr_get_tuner_gains(_dev, gains);
+
+		for (int i=0; i<count; i++)
+			{
+			double gain = ((double)(gains[i]))/10.0;
+			list.append(gain);
+			}
+		}
+
+	return list;
 	}
 
 /******************************************************************************\

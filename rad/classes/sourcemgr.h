@@ -27,9 +27,17 @@ class SourceMgr : public QObject
 		QThread *		_thread;				// The background thread
 
 		/**********************************************************************\
-		|* Private methods
+		|* Private method - use the filters to select a radio source
 		\**********************************************************************/
 		void _findMatchingSource(void);
+
+		/******************************************************************************\
+		|* Private method - show a list with a title
+		\******************************************************************************/
+		void _showList(QString title,
+					   const char *sep,
+					   const char *prefix,
+					   QList<QString>list);
 
 	public:
 		/**********************************************************************\

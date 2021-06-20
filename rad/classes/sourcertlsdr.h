@@ -61,6 +61,32 @@ class SourceRtlSdr : public SourceBase
 		\**********************************************************************/
 		virtual bool setAntenna(QString antenna);
 
+		/**********************************************************************\
+		|* Get a list of available antennas
+		\**********************************************************************/
+		virtual QList<QString> listAntennas(void);
+
+		/**********************************************************************\
+		|* Get a list of available bandwidth settings
+		\**********************************************************************/
+		virtual QList<QString> listBandwidths(void);
+
+		/**********************************************************************\
+		|* Get the number of available channels for RX and TX
+		\**********************************************************************/
+		virtual ChannelInfo numberOfChannels(void);
+
+		/**********************************************************************\
+		|* Get a list of frequency ranges, in Hz
+		\**********************************************************************/
+		virtual QList<Range> listFrequencyRanges(void);
+
+		/**********************************************************************\
+		|* Get a list of gains in dB
+		\**********************************************************************/
+		virtual QList<double> listGains(void);
+
+
 
 		/**********************************************************************\
 		|* Signal handler, has to be public to be invokable from 'C'

@@ -14,15 +14,28 @@ class SourceBase : public QObject
 		\**********************************************************************/
 		typedef enum
 			{
-			STREAM_S8C		= 0,
-			STREAM_S16C
+			STREAM_S8C		= 0,		// Signed, 8-bit data
+			STREAM_S16C					// Signed, 16-bit data
 			} StreamFormat;
 
 		struct StreamInfo
 			{
-			StreamFormat format;
-			QString name;
-			QString mode;
+			StreamFormat format;		// Native format for dats
+			double max;					// Maximum value in stream
+			QString name;				// Name of the driver
+			QString mode;				// Operating mode
+			};
+
+		struct ChannelInfo
+			{
+			int rx;						// Number of RX channels
+			int tx;						// Number of TX channels
+			};
+
+		struct Range
+			{
+			double from;				// Low part of range
+			double to;					// Top part of range
 			};
 
 		/**********************************************************************\
@@ -62,6 +75,31 @@ class SourceBase : public QObject
 		virtual bool setAntenna(QString antenna) = 0;
 
 		/**********************************************************************\
+		|* Get a list of available antennas
+		\**********************************************************************/
+		virtual QList<QString> listAntennas(void) = 0;
+
+		/**********************************************************************\
+		|* Get a list of available bandwidth settings, in kHz
+		\**********************************************************************/
+		virtual QList<QString> listBandwidths(void) = 0;
+
+		/**********************************************************************\
+		|* Get a list of frequency ranges, in MHz
+		\**********************************************************************/
+		virtual QList<Range> listFrequencyRanges(void) = 0;
+
+		/**********************************************************************\
+		|* Get a list of gains in dB
+		\**********************************************************************/
+		virtual QList<double> listGains(void) = 0;
+
+		/**********************************************************************\
+		|* Get the number of channels in each direction
+		\**********************************************************************/
+		virtual ChannelInfo numberOfChannels(void) = 0;
+
+		/**********************************************************************\
 		|* Convenience method to return the name
 		\**********************************************************************/
 		virtual QString name()
@@ -86,6 +124,28 @@ class SourceBase : public QObject
 			{
 			StreamInfo info = streamInfo();
 			return info.format;
+			};
+
+		/**********************************************************************\
+		|* Convenience method to return the format name
+		\**********************************************************************/
+		virtual const char * formatName()
+			{
+			StreamInfo info = streamInfo();
+			switch (info.format)
+				{
+				case STREAM_S8C:
+					return "8-bit, signed, complex";
+					break;
+
+				case STREAM_S16C:
+					return "16-bit, signed, complex";
+					break;
+
+				default:
+					return "undefined";
+					break;
+				}
 			};
 
 	public slots:

@@ -89,7 +89,13 @@ void Processor::dataReceived(int64_t buffer,
 			}
 
 		}
+
+	/**************************************************************************\
+	|* Reset the work pointer and release the incoming buffer memory back to the
+	|* pool
+	\**************************************************************************/
 	work = dmgr.asDouble(_work);
+	dmgr.release(buffer);
 
 	/**************************************************************************\
 	|* There are three cases:

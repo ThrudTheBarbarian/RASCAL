@@ -25,6 +25,68 @@ SourceMgr::SourceMgr(QObject *parent)
 		  ,_src(nullptr)
 	{
 	_findMatchingSource();
+
+	/**************************************************************************\
+	|* Handle commandline options to list out stats etc.
+	\**************************************************************************/
+	bool listed = false;
+	if (_src)
+		{
+		if (Config::instance().listAntennas())
+			{
+			listed = true;
+			QList<QString> antennas = _src->listAntennas();
+			_showList("Antennas", "\n", "  ", antennas);
+			}
+
+		if (Config::instance().listChannels())
+			{
+			listed = true;
+			SourceBase::ChannelInfo info = _src->numberOfChannels();
+			printf("Channel count: rx=%d, tx=%d\n", info.rx, info.tx);
+			}
+
+		if (Config::instance().listBandwidths())
+			{
+			listed = true;
+			QList<QString> bw = _src->listBandwidths();
+			_showList("Bandwidths (kHz)", ",", " ", bw);
+			}
+
+		if (Config::instance().listFrequencyRanges())
+			{
+			listed = true;
+			QList<SourceBase::Range> ranges = _src->listFrequencyRanges();
+			QList<QString> info;
+			for (SourceBase::Range& range : ranges)
+				info.append(QString("%1 -> %2").arg(range.from).arg(range.to));
+			_showList("Frequencies (MHz)", "\n", "  ", info);
+			}
+
+		if (Config::instance().listNativeFormat())
+			{
+			listed = true;
+			SourceBase::StreamInfo info = _src->streamInfo();
+			printf("Native format: %s [max=%f]\n", _src->formatName(), info.max);
+			}
+
+		if (Config::instance().listGains())
+			{
+			listed = true;
+			QList<double> gains = _src->listGains();
+			QList<QString> info;
+			for (double gain : gains)
+				info.append(QString("%1").arg(gain));
+			_showList("Gains (dB)", ",", " ", info);
+			}
+		}
+
+	if (listed)
+		{
+		printf("Exiting on request\n");
+		fflush(stdout);
+		exit(0);
+		}
 	}
 
 
@@ -151,4 +213,36 @@ bool SourceMgr::start(Processor *processor)
 		}
 
 	return ok;
+	}
+
+/******************************************************************************\
+|* Private method - show a list with a title
+\******************************************************************************/
+void SourceMgr::_showList(QString title,
+						  const char *sep,
+						  const char *prefix,
+						  QList<QString>list)
+	{
+	int num = list.length();
+
+	printf("%s:", qPrintable(title));
+	if (num == 0)
+		printf(" none\n");
+	else if (num == 1)
+		printf(" %s\n", qPrintable(list.at(0)));
+	else
+		{
+		if (sep[strlen(sep)-1] == '\n')
+			printf("\n");
+
+		for (int i=0; i<num; i++)
+			{
+			printf("%s%s", prefix, qPrintable(list.at(i)));
+			if (i < num-1)
+				printf("%s", sep);
+			}
+
+		if (sep[strlen(sep)-1] != '\n')
+			printf("\n");
+		}
 	}
