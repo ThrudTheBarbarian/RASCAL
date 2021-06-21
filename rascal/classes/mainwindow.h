@@ -82,5 +82,13 @@ class MainWindow : public QMainWindow
 		|* Let those who care, know about new sample data
 		\**********************************************************************/
 		void sampleReady(int64_t bufferId);
+
+	private slots:
+		/**********************************************************************\
+		|* Menu actions unless otherwise annotated
+		\**********************************************************************/
+		void on_actionBegin_calibration_triggered();
+		void on_actionStop_calibration_triggered();
+		void on_actionLoad_calibration_triggered();
 	};
 #endif // MAINWINDOW_H

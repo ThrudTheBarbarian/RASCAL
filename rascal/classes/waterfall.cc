@@ -2,6 +2,7 @@
 
 #include <libra.h>
 
+#include "mainwindow.h"
 #include "waterfall.h"
 
 #define LOG qDebug(log_gui) << QTime::currentTime().toString("hh:mm:ss.zzz")
@@ -75,12 +76,36 @@ Waterfall::Waterfall(QWidget *parent)
 void Waterfall::paintEvent(QPaintEvent *e)
 	{
 	Q_UNUSED(e);
-
-	if (_img != nullptr)
+	if (_img == nullptr)
 		{
 		QPainter qp(this);
-		qp.drawImage(rect(), *_img);
+		QFont font("Helvetica [Cronyx]", 36);
+		qp.setFont(font);
+		qp.setPen(QColor::fromRgb(128,128,128));
+
+		int W = size().width();
+		int H = size().height();
+		QFontMetrics qfm(font);
+		QString msg = "Awaiting data";
+		QRect bounds = qfm.boundingRect(msg);
+
+		int x = W/2 - bounds.width()/2;
+		int y = H/2 - bounds.height()/2;
+		qp.drawText(x, y, msg);
+
+		return;
 		}
+
+	/**************************************************************************\
+	|* Create the rectangle to draw the graph within
+	\**************************************************************************/
+	QRect R(MainWindow::DRAW_L,
+			MainWindow::DRAW_T,
+			size().width()  - MainWindow::DRAW_L - MainWindow::DRAW_R,
+			size().height() - MainWindow::DRAW_T - MainWindow::DRAW_B);
+
+	QPainter qp(this);
+	qp.drawImage(R, *_img);
 	}
 
 

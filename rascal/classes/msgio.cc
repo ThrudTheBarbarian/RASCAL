@@ -44,6 +44,28 @@ void Msgio::connectToServer(void)
 
 
 /******************************************************************************\
+|* Send a text message
+\******************************************************************************/
+qint64 Msgio::sendTextMessage(const QString &message)
+	{
+	if (_isConnected)
+		return _socket.sendTextMessage(message);
+	ERR << "Attempted to send text message while disconnected";
+	return -1;
+	}
+
+/******************************************************************************\
+|* Handle connection
+\******************************************************************************/
+qint64 Msgio::sendBinaryMessage(const QByteArray &data)
+	{
+	if (_isConnected)
+		return _socket.sendBinaryMessage(data);
+	ERR << "Attempted to send binary message while disconnected";
+	return -1;
+	}
+
+/******************************************************************************\
 |* Handle connection
 \******************************************************************************/
 void Msgio::onConnected(void)

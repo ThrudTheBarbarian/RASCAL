@@ -23,8 +23,33 @@
      <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuok">
+    <property name="title">
+     <string>Data</string>
+    </property>
+    <addaction name="actionBegin_calibration"/>
+    <addaction name="actionStop_calibration"/>
+    <addaction name="actionLoad_calibration"/>
+    <addaction name="separator"/>
+   </widget>
+   <addaction name="menuok"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionBegin_calibration">
+   <property name="text">
+    <string>Begin calibration</string>
+   </property>
+  </action>
+  <action name="actionStop_calibration">
+   <property name="text">
+    <string>Stop calibration</string>
+   </property>
+  </action>
+  <action name="actionLoad_calibration">
+   <property name="text">
+    <string>Load calibration</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

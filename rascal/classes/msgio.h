@@ -53,12 +53,24 @@ class Msgio : public QObject
 	\**********************************************************************/
 	void connectToServer(void);
 
+	/**********************************************************************\
+	|* Send appropriate message types
+	\**********************************************************************/
+	qint64 sendTextMessage(const QString &message);
+	qint64 sendBinaryMessage(const QByteArray &data);
+
+	/**********************************************************************\
+	|* Private slots
+	\**********************************************************************/
 	private slots:
 		void onConnected();
 		void onTextMessageReceived(const QString message);
 		void onBinaryMessageReceived(const QByteArray &message);
 		void closed();
 
+	/**********************************************************************\
+	|* Emitted signals
+	\**********************************************************************/
 	signals:
 		void sampleReceived(int64_t bufferId);
 		void updateReceived(int64_t bufferId);

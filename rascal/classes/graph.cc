@@ -43,6 +43,23 @@ void Graph::paintEvent(QPaintEvent *e)
 		QPainter qp(this);
 		qp.drawImage(rect(), *_img);
 		}
+	else
+		{
+		QPainter qp(this);
+		QFont font("Helvetica [Cronyx]", 36);
+		qp.setFont(font);
+		qp.setPen(QColor::fromRgb(128,128,128));
+
+		int W = size().width();
+		int H = size().height();
+		QFontMetrics qfm(font);
+		QString msg = "Awaiting data";
+		QRect bounds = qfm.boundingRect(msg);
+
+		int x = W/2 - bounds.width()/2;
+		int y = H/2 - bounds.height()/2;
+		qp.drawText(x, y, msg);
+		}
 	}
 
 
@@ -219,7 +236,6 @@ void Graph::_updateImage(void)
 			 ? QPen(QColor::fromRgba(qRgba(0,0,0,128 / uNum)))
 			 : QPen(qRgba(0,0,0,255));
 	painter.setPen(pen);
-	ERR << pen << "size:" << uNum;
 
 	/**************************************************************************\
 	|* Draw the updates

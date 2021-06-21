@@ -113,3 +113,31 @@ void MainWindow::sampleReceived(int64_t bufferId)
 	emit sampleReady(bufferId);
 	dmgr.release(bufferId);
 	}
+
+/******************************************************************************\
+|* Menu action: We want to begin calibration
+\******************************************************************************/
+void MainWindow::on_actionBegin_calibration_triggered()
+	{
+	LOG << "Beginning calibration";
+	_io->sendTextMessage("CALIBRATION BEGIN");
+	}
+
+/**********************************************************************\
+|* Menu action: We want to stop calibration
+\**********************************************************************/
+void MainWindow::on_actionStop_calibration_triggered()
+	{
+	LOG << "Stopping calibration";
+	_io->sendTextMessage("CALIBRATION END");
+	}
+
+/**********************************************************************\
+|* Menu action: We want to load the calibration
+\**********************************************************************/
+void MainWindow::on_actionLoad_calibration_triggered()
+	{
+	LOG << "Loading calibration";
+	_io->sendTextMessage("CALIBRATION LOAD");
+	}
+
