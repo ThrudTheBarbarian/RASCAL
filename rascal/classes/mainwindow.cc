@@ -4,6 +4,7 @@
 #include "ui_mainwindow.h"
 
 #include "constants.h"
+#include "datamgr.h"
 #include "events.h"
 #include "graph.h"
 #include "limiters.h"
@@ -61,10 +62,54 @@ void MainWindow::createUI(Msgio *io)
 	setWindowTitle("RASCAL");
 
 	/**************************************************************************\
-	|* Connect up the data-flow from io->waterfall
+	|* Connect up the data-flow from io->* : update
 	\**************************************************************************/
 	connect(_io, &Msgio::updateReceived,
+			this, &MainWindow::updateReceived);
+	connect(this, &MainWindow::updateReady,
 			_waterfall, &Waterfall::updateReceived);
+	connect(this, &MainWindow::updateReady,
+			_graph, &Graph::updateReceived);
+
+
+	/**************************************************************************\
+	|* Connect up the data-flow from io->* : sample
+	\**************************************************************************/
 	connect(_io, &Msgio::sampleReceived,
+			this, &MainWindow::sampleReceived);
+	connect(this, &MainWindow::sampleReady,
 			_waterfall, &Waterfall::sampleReceived);
+	connect(this, &MainWindow::sampleReady,
+			_graph, &Graph::sampleReceived);
+	}
+
+/******************************************************************************\
+|* Distribute the update data, handling the retain/release correctly
+\******************************************************************************/
+void MainWindow::updateReceived(int64_t bufferId)
+	{
+	DataMgr& dmgr		= DataMgr::instance();
+
+	/**********************************************************************\
+	|* Buffer comes to us with a retain-count of 1, so make sure it is sent
+	|* to all destinations before we release the bufferId
+	\**********************************************************************/
+	emit updateReady(bufferId);
+	dmgr.release(bufferId);
+	}
+
+
+/******************************************************************************\
+|* Distribute the sample data, handling the retain/release correctly
+\******************************************************************************/
+void MainWindow::sampleReceived(int64_t bufferId)
+	{
+	DataMgr& dmgr		= DataMgr::instance();
+
+	/**********************************************************************\
+	|* Buffer comes to us with a retain-count of 1, so make sure it is sent
+	|* to all destinations before we release the bufferId
+	\**********************************************************************/
+	emit sampleReady(bufferId);
+	dmgr.release(bufferId);
 	}

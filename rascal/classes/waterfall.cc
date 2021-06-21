@@ -75,19 +75,10 @@ Waterfall::Waterfall(QWidget *parent)
 void Waterfall::paintEvent(QPaintEvent *e)
 	{
 	Q_UNUSED(e);
-	QPainter qp(this);
 
-	if (_img == nullptr)
+	if (_img != nullptr)
 		{
-		for (int i=0; i<100; i++)
-			{
-			QPen pen(_getGradientColour(((float)i)/100.0), 2, Qt::SolidLine);
-			qp.setPen(pen);
-			qp.drawLine(20, 10+2*i, 250, 10+2*i);
-			}
-		}
-	else
-		{
+		QPainter qp(this);
 		qp.drawImage(rect(), *_img);
 		}
 	}
@@ -130,6 +121,7 @@ void Waterfall::updateReceived(int64_t idx)
 	/**************************************************************************\
 	|* Update the backing data
 	\**************************************************************************/
+	dmgr.retain(idx);
 	_updates.insert(0, idx);
 	int limit = _updatesHeight();
 	while (_updates.size() > limit)
@@ -187,6 +179,7 @@ void Waterfall::sampleReceived(int64_t idx)
 	/**************************************************************************\
 	|* Update the backing data
 	\**************************************************************************/
+	dmgr.retain(idx);
 	_samples.insert(0, idx);
 	while (_updates.size() > MAX_SAMPLES)
 		{
