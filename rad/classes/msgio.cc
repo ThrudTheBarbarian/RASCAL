@@ -1,8 +1,10 @@
+#include <QFileInfo>
 #include <QtWebSockets>
 #include <QWebSocketServer>
 
 #include <libra.h>
 
+#include "config.h"
 #include "msgio.h"
 
 /******************************************************************************\
@@ -12,6 +14,8 @@ Q_LOGGING_CATEGORY(log_net, "rascal.net   ")
 
 #define LOG qDebug(log_net) << QTime::currentTime().toString("hh:mm:ss.zzz")
 #define ERR qCritical(log_net) << QTime::currentTime().toString("hh:mm:ss.zzz")
+
+#define CALIBRATION_FILE "/calib.dat"
 
 /******************************************************************************\
 |* Helper function: Create an identifier for a connection
@@ -25,8 +29,50 @@ static QString getIdentifier(QWebSocket *peer)
 /******************************************************************************\
 |* Constructor
 \******************************************************************************/
-MsgIO::MsgIO(QObject *parent) : QObject(parent)
-	{}
+MsgIO::MsgIO(QObject *parent)
+	  :QObject(parent)
+	  ,_isCalibrating(false)
+	  ,_calibration(-1)
+	  ,_calibrationPasses(0)
+	  ,_useCalibration(false)
+	  ,_calData(-1)
+	  ,_calNum(0)
+	{
+	DataMgr &dmgr	= DataMgr::instance();
+	/**************************************************************************\
+	|* Check to see if there is any calibration data, if so, use it
+	\**************************************************************************/
+	QString appDir	= Config::instance().saveDir();
+	QString file	= appDir + CALIBRATION_FILE;
+
+	QFileInfo check(file);
+	if (check.exists())
+		{
+		_calNum			= check.size() / sizeof(float);
+		_calData		= dmgr.blockFor(_calNum, sizeof(float));
+		float * data	= dmgr.asFloat(_calData);
+		if (data != nullptr)
+			{
+			FILE *fp = fopen(qPrintable(file), "rb");
+			if (fp != nullptr)
+				{
+				fread(data, sizeof(float), _calNum, fp);
+				fclose(fp);
+				_useCalibration = true;
+				}
+			else
+				{
+				ERR << "Cannot read calibration data";
+				// Be explicit
+				dmgr.release(_calNum);
+				_calNum			= -1;
+				_useCalibration = false;
+				}
+			}
+		else
+			ERR << "Cannot allocate calibration data space";
+		}
+	}
 
 /******************************************************************************\
 |* Destructor
@@ -81,7 +127,12 @@ void MsgIO::onNewConnection(void)
 \******************************************************************************/
 void MsgIO::processTextMessage(const QString& msg)
 	{
-	LOG << "WebSocket got: " << msg;
+	if (msg == "CALIBRATION BEGIN")
+		_beginCalibration();
+	else if (msg == "CALIBRATION END")
+		_stopCalibration();
+	else if (msg == "CALIBRATION LOAD")
+		_loadCalibration();
 	}
 
 /******************************************************************************\
@@ -107,16 +158,52 @@ void MsgIO::socketDisconnected(void)
 		}
 	}
 
+
+/******************************************************************************\
+|* Send a text message
+\******************************************************************************/
+void MsgIO::sendTextMessage(const QString &message)
+	{
+	for (QWebSocket *client : qAsConst(_clients))
+		client->sendTextMessage(message);
+	}
+
+/******************************************************************************\
+|* Send a binary message
+\******************************************************************************/
+void MsgIO::sendBinaryMessage(const QByteArray &data)
+	{
+	for (QWebSocket *client : qAsConst(_clients))
+		client->sendBinaryMessage(data);
+	}
+
 /******************************************************************************\
 |* We have new smoothed data, send it off to all the clients. This comes in
 |* as a buffer of floats, _fftSize long
 \******************************************************************************/
 void MsgIO::newData(PreambleType type, int64_t bufferId)
 	{
+	QMutexLocker guard(&_lock);
 	DataMgr &dmgr	= DataMgr::instance();
 
+	if ((type == TYPE_UPDATE) && _isCalibrating)
+		_appendToCalibration(bufferId);
+
 	size_t extent	= dmgr.extent(bufferId);
-	uint8_t *src	= dmgr.asUint8(bufferId);
+	float *src		= dmgr.asFloat(bufferId);
+
+	if (_useCalibration)
+		{
+		int num = extent / sizeof(float);
+		if (num == _calNum)
+			{
+			float *calValues = dmgr.asFloat(_calData);
+			for (int i=0; i<num; i++)
+				src[i] -= calValues[i];
+			}
+		else
+			ERR << "Calibration range" << _calNum << " mismatch to " <<num;
+		}
 
 	int dstId		= dmgr.blockFor(extent+sizeof(Preamble));
 	char *dst		= reinterpret_cast<char *>(dmgr.asUint8(dstId));
@@ -143,4 +230,101 @@ void MsgIO::newData(PreambleType type, int64_t bufferId)
 		}
 
 	dmgr.release(bufferId);
+	}
+
+/******************************************************************************\
+|* Set up for starting a calibration run
+\******************************************************************************/
+void MsgIO::_beginCalibration(void)
+	{
+	LOG << "Beginning calibration";
+	QMutexLocker guard(&_lock);
+	if (_calibration >= 0)
+		{
+		DataMgr &dmgr = DataMgr::instance();
+		dmgr.release(_calibration);
+		}
+	_calibration		= -1;
+	_calibrationPasses	= 0;
+	_isCalibrating		= true;
+	}
+
+/******************************************************************************\
+|* Add calibration data. Note: does not need the lock, since it's only called
+|* from within newData() which already has the lock
+\******************************************************************************/
+void MsgIO::_appendToCalibration(int64_t buffer)
+	{
+	LOG << "Appending calibration data";
+	DataMgr &dmgr = DataMgr::instance();
+	float * src   = dmgr.asFloat(buffer);
+	int extent	  = dmgr.extent(buffer);
+	int count	  = extent / sizeof(float);
+
+	if (_calibration < 0)
+		{
+		LOG << "Creating calibration storage";
+		_calibration = dmgr.blockFor(count, sizeof(double));
+		double *dst  = dmgr.asDouble(_calibration);
+		if (dst == nullptr)
+			{
+			ERR << "Cannot allocate calibration array";
+			_calibration = -1;
+			return;
+			}
+		memset(dst, 0, sizeof(double) * count);
+		}
+
+	double *dst  = dmgr.asDouble(_calibration);
+	for (int i=0; i<count; i++)
+		dst[i] += src[i];
+	_calibrationPasses ++;
+	}
+
+/******************************************************************************\
+|* Stop calibrating and write the calibration to storage
+\******************************************************************************/
+void MsgIO::_stopCalibration(void)
+	{
+	LOG << "Stopping calibration";
+	if (_calibrationPasses == 0)
+		ERR << "Need more data before we can save calibration";
+	else if (_calibration > 0)
+		{
+		QMutexLocker guard(&_lock);
+		DataMgr &dmgr	= DataMgr::instance();
+		QString appDir	= Config::instance().saveDir();
+		QString file	= appDir + CALIBRATION_FILE;
+
+		double * data  = dmgr.asDouble(_calibration);
+		int extent	  = dmgr.extent(_calibration);
+
+		FILE *fp = fopen(qPrintable(file), "wb");
+		if (fp != nullptr)
+			{
+			int num = extent / sizeof(double);
+			float vals[num];
+			for (int i=0; i<num; i++)
+				vals[i] = data[i] / _calibrationPasses;
+			fwrite(vals, sizeof(float), num, fp);
+			fclose(fp);
+			}
+		else
+			ERR << "Cannot open" << file << "for output";
+
+		dmgr.release(_calibration);
+		_calibration	= -1;
+		_isCalibrating	= false;
+		}
+	else
+		ERR << "Cannot save non-existent calibration data!";
+	}
+
+/******************************************************************************\
+|* Stop calibrating and write the calibration to storage
+\******************************************************************************/
+void MsgIO::_loadCalibration(void)
+	{
+	QMutexLocker guard(&_lock);
+
 	}

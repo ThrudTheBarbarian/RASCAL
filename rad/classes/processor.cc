@@ -61,9 +61,17 @@ void Processor::dataReceived(int64_t buffer,
 	double scale	= 1.0 / (double)max;
 
 	/**************************************************************************\
-	|* A complex stream has 2x the data
+	|* A complex stream has 2x the data, extent is the number of doubles, not
+	|* the number of IQ pairs
 	\**************************************************************************/
 	int extent		= samples;
+
+	/**************************************************************************\
+	|* For signed data (and the switch block knows that the data is signed or
+	|* not), we have to subtract (max-1) to give the range -(max-1)...(max) from
+	|* the unsigned input data
+	\**************************************************************************/
+	int shift		= max - 1;
 
 	/**************************************************************************\
 	|* Convert the incoming buffer to double values
@@ -75,7 +83,7 @@ void Processor::dataReceived(int64_t buffer,
 			extent *= 2;
 			int8_t * src8 = dmgr.asInt8(buffer);
 			for (int i=0; i<extent; i++)
-				*work++ = (*src8++) * scale;
+				*work++ = ((*src8++) - shift) * scale;
 			break;
 			}
 
@@ -84,7 +92,7 @@ void Processor::dataReceived(int64_t buffer,
 			extent *= 2;
 			int16_t * src16 = dmgr.asInt16(buffer);
 			for (int i=0; i<extent; i++)
-				*work++ = (*src16++) * scale;
+				*work++ = ((*src16++) - shift) * scale;
 			break;
 			}
 
@@ -99,7 +107,8 @@ void Processor::dataReceived(int64_t buffer,
 
 	/**************************************************************************\
 	|* There are three cases:
-	|* 1: The number of elems from before + this batch < fftSize
+	|* 1: The number of I,Q elems from before + this batch < fftSize (this ought
+	|*    never really happen)
 	\**************************************************************************/
 	if (_previous.size() + extent < _fftSize*2)
 		{

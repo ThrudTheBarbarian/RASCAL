@@ -1,8 +1,18 @@
 #include <QCoreApplication>
+#include <QDir>
 #include <QObject>
 #include <QSettings>
+#include <QStandardPaths>
+
+#include <libra.h>
 
 #include "config.h"
+
+/******************************************************************************\
+|* Categorised logging support
+\******************************************************************************/
+#define LOG qDebug(log_data) << QTime::currentTime().toString("hh:mm:ss.zzz")
+#define ERR qCritical(log_data) << QTime::currentTime().toString("hh:mm:ss.zzz")
 
 /******************************************************************************\
 |* These are the keys we look for in the config file
@@ -10,6 +20,7 @@
 #define RADIO_GROUP			"radio"
 #define DSP_GROUP			"dsp"
 #define NETWORK_GROUP		"network"
+#define FILE_GROUP			"files"
 
 #define DRIVER_KEY			"filter-driver"
 #define MODEL_KEY			"filter-model"
@@ -29,6 +40,7 @@
 #define DEFAULT_FFT_SIZE	"1024"
 
 #define NET_PORT_KEY		"network-port"
+#define SAVE_DIR_KEY		"save-dir"
 
 /******************************************************************************\
 |* These are the commandline args we're managing
@@ -44,8 +56,11 @@ Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 		_bandwidth,
 		({"b", "bandwidth"}, "Tuner bandwidth to use", "-1"))
 Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
+		_saveDir,
+		({"d", SAVE_DIR_KEY}, "Directory to store data to", "~/.rad"))
+Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 		_driverFilter,
-		(DRIVER_KEY, "Filter for the driver name", "sdrplay"))
+		(DRIVER_KEY, "Filter for the driver name", "rtlsdr"))
 Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 		_modeFilter,
 		(MODEL_KEY, "Filter for the mode name", ""))
@@ -114,6 +129,7 @@ Config::Config()
 	_parser.setApplicationDescription("RASCAL daemon");
 	_parser.addOption(*_antenna);
 	_parser.addOption(*_bandwidth);
+	_parser.addOption(*_saveDir);
 	_parser.addOption(*_driverFilter);
 	_parser.addOption(*_idFilter);
 	_parser.addOption(*_frequency);
@@ -154,6 +170,27 @@ Config::Config()
 
 	if (_parser.isSet(*_version))
 		_parser.showVersion();
+	}
+
+/******************************************************************************\
+|* Get the directory to save stuff to, and make sure it exists
+\******************************************************************************/
+QString Config::saveDir(void)
+	{
+	if (_parser.isSet(*_saveDir))
+		return _parser.value(*_saveDir);
+
+	QSettings s;
+	s.beginGroup(FILE_GROUP);
+	QString dir = s.value(SAVE_DIR_KEY, "").toString();
+	s.endGroup();
+
+	if (dir.length() == 0)
+		dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+
+	QDir directory(dir);
+	directory.mkpath(".");
+	return dir;
 	}
 
 /******************************************************************************\
@@ -302,7 +339,7 @@ double Config::gain(void)
 
 	QSettings s;
 	s.beginGroup(RADIO_GROUP);
-	QString gain = s.value(GAIN_KEY, "39").toString();
+	QString gain = s.value(GAIN_KEY, "49").toString();
 	s.endGroup();
 	return gain.toDouble();
 	}

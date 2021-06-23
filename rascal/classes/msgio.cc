@@ -55,7 +55,7 @@ qint64 Msgio::sendTextMessage(const QString &message)
 	}
 
 /******************************************************************************\
-|* Handle connection
+|* Send a binary message
 \******************************************************************************/
 qint64 Msgio::sendBinaryMessage(const QByteArray &data)
 	{

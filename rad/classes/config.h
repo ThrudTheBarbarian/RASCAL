@@ -108,6 +108,11 @@ class Config : public Singleton<Config>
 		\******************************************************************/
 		int radioIdFilter(void);
 
+		/******************************************************************\
+		|* Return the directory to save data to
+		\******************************************************************/
+		QString saveDir(void);
+
 	};
 
 #endif // CONFIG_H
