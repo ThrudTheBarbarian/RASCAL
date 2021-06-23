@@ -107,8 +107,8 @@ void Processor::dataReceived(int64_t buffer,
 
 	/**************************************************************************\
 	|* There are three cases:
-	|* 1: The number of I,Q elems from before + this batch < fftSize (this ought
-	|*    never really happen)
+	|* 1: The number of I,Q elems from before + this batch < fftSize
+	|*    (this ought never really happen)
 	\**************************************************************************/
 	if (_previous.size() + extent < _fftSize*2)
 		{

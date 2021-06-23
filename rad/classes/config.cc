@@ -7,6 +7,7 @@
 #include <libra.h>
 
 #include "config.h"
+#include "tester.h"
 
 /******************************************************************************\
 |* Categorised logging support
@@ -89,6 +90,9 @@ Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 		_timeSample,
 		({"t", "time-between-samples"}, "Time to aggregate data over", "300"))
 Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
+		_test,
+		("test", "Run self-tests on the code"))
+Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
 		_timeUpdate,
 		({"u", "time-between-updates"}, "Send an update every ...", "5"))
 Q_GLOBAL_STATIC_WITH_ARGS(const QCommandLineOption,
@@ -147,6 +151,7 @@ Config::Config()
 	_parser.addOption(*_modeFilter);
 	_parser.addOption(*_networkPort);
 	_parser.addOption(*_sampleRate);
+	_parser.addOption(*_test);
 	_parser.addOption(*_timeSample);
 	_parser.addOption(*_timeUpdate);
 	_parser.addOption(*_version);
@@ -154,6 +159,13 @@ Config::Config()
 
 	_parser.parse(QCoreApplication::arguments());
 	_listAll = _parser.isSet(*_listAllInfo);
+
+	if (_parser.isSet(*_test))
+		{
+		Tester tester;
+		tester.test();
+		exit(0);
+		}
 
 	if (_parser.isSet(*_help))
 		{

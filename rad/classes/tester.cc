@@ -1,10 +1,15 @@
+#include "datamgr.h"
+#include "taskfft.h"
 #include "tester.h"
 
 /******************************************************************************\
 |* Construct a tester
 \******************************************************************************/
 Tester::Tester()
-	{}
+	{
+	_duts.append(&DataMgr::instance());
+	_duts.append(new TaskFFT);
+	}
 
 void Tester::test(void)
 	{

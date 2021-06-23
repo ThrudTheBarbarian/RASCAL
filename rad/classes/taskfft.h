@@ -6,9 +6,9 @@
 #include <QObject>
 #include <QRunnable>
 
-#include "properties.h"
+#include <libra.h>
 
-class TaskFFT : public QObject, public QRunnable
+class TaskFFT : public QObject, public QRunnable, public Testable
 	{
 	Q_OBJECT
 
@@ -40,6 +40,7 @@ class TaskFFT : public QObject, public QRunnable
 		\**********************************************************************/
 		TaskFFT(double *iq, int num);
 		TaskFFT(double *iq1, int num1, double *iq2, int num2);
+		TaskFFT(void);		// Only useful for testing with
 		~TaskFFT(void);
 
 		/**********************************************************************\
@@ -52,6 +53,47 @@ class TaskFFT : public QObject, public QRunnable
 		|* FFT done, please aggregate this data
 		\**********************************************************************/
 		void fftDone(int bufferId);
+
+
+	/**************************************************************************\
+	|* Test interface
+	\**************************************************************************/
+	public:
+		/**********************************************************************\
+		|* Test i/f: return the number of tests available
+		\**********************************************************************/
+		int numTests(void) override;
+
+		/**********************************************************************\
+		|* Test i/f: return the class name
+		\**********************************************************************/
+		const char * testClassName(void) override;
+
+		/**********************************************************************\
+		|* Test i/f: run a test
+		\**********************************************************************/
+		Testable::TestResult runTest(int idx) override;
+
+	private:
+		/**********************************************************************\
+		|* Test i/f: Test the first constructor places data in the correct way
+		\**********************************************************************/
+		Testable::TestResult _checkDoubleBufferConstructor(void);
+
+		/**********************************************************************\
+		|* Test i/f: Test the second constructor places data in the correct way
+		\**********************************************************************/
+		Testable::TestResult _checkSingleBufferConstructor(void);
+
+		/**********************************************************************\
+		|* Test i/f: Test the second constructor places data in the correct way
+		\**********************************************************************/
+		Testable::TestResult _checkComplexDataAccess(void);
+
+		/**********************************************************************\
+		|* Test i/f: Test that the FFT returns the results we expect
+		\**********************************************************************/
+		Testable::TestResult _checkFFTCorrectness(void);
 	};
 
 #endif // TASKFFT_H

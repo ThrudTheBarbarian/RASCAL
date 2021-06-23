@@ -27,12 +27,10 @@ DataMgr::DataMgr(void)
 \******************************************************************************/
 DataMgr::~DataMgr(void)
 	{
-	for (DataBlock* block : _candidate)
-		delete block;
+	qDeleteAll(_candidate);
 	_candidate.clear();
 
-	QMap<int64_t, DataBlock*>::const_iterator i = _active.constBegin();
-		delete i.value();
+	qDeleteAll(_active);
 	_active.clear();
 	}
 
@@ -385,7 +383,15 @@ int DataMgr::numTests(void)
 	}
 
 /******************************************************************************\
-|* Test interface : return the number of tests we can run
+|* Test interface : identify the class being tested
+\******************************************************************************/
+const char * DataMgr::testClassName(void)
+	{
+	return "DataMgr";
+	}
+
+/******************************************************************************\
+|* Test interface : Run a given test
 \******************************************************************************/
 Testable::TestResult DataMgr::runTest(int idx)
 	{
@@ -436,7 +442,7 @@ Testable::TestResult DataMgr::_checkAllocations(void)
 	}
 
 /******************************************************************************\
-|* Test interface : Check that we can allocate things
+|* Test interface : Check that retain and release work
 \******************************************************************************/
 Testable::TestResult DataMgr::_checkRetainRelease(void)
 	{
@@ -510,10 +516,3 @@ Testable::TestResult DataMgr::_checkRetainRelease(void)
 	return Testable::TEST_PASS;
 	}
 
-/******************************************************************************\
-|* Test interface : identify the class being tested
-\******************************************************************************/
-const char * DataMgr::testClassName(void)
-	{
-	return "DataMgr";
-	}
