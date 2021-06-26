@@ -115,7 +115,7 @@ void TaskFFT::run(void)
 	\**********************************************************************/
 	fftw_complex *src = dmgr.asFFT(_data);
 	fftw_complex *dst = dmgr.asFFT(_results);
-	fftw_execute_dft(_plan,  src, dst);
+	fftw_execute_dft(_plan, src, dst);
 
 	/**********************************************************************\
 	|* And tell the world we're done
@@ -360,7 +360,7 @@ Testable::TestResult TaskFFT::_checkFFTCorrectness(void)
 	|*	REAL[7]=  1.000,   IMAG[7]=  0.000
 	\**************************************************************************/
 	double input[16];
-	memset(input, 0, sizeof(double) * 16);
+	::memset(input, 0, sizeof(double) * 16);
 	input[0] = 1.0;
 
 	/**************************************************************************\
@@ -417,7 +417,7 @@ Testable::TestResult TaskFFT::_checkFFTCorrectness(void)
 	|*	REAL[2]=  0.000,		IMAG[2]=  1.000
 	|*	REAL[3]=  0.707107,		IMAG[3]=  0.707107
 	\**************************************************************************/
-	memset(input, 0, sizeof(double) * 16);
+	::memset(input, 0, sizeof(double) * 16);
 	input[2] = 1.0;
 
 	double R[8] = {-1,-0.707107,0,0.707107,1,0.707107,0,-0.707107};

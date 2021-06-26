@@ -84,9 +84,6 @@ void FFTAggregator::fftReady(int buffer)
 		double power	= creal * creal + cimag * cimag;
 		double mag		= 0.05 * log(power+1);
 
-		// FIXME: Add normalisation here
-		// mag -= _normalisation[i];
-
 		_updateData[i] += mag;
 		_updatePasses  ++;
 

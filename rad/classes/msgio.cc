@@ -247,6 +247,7 @@ void MsgIO::_beginCalibration(void)
 	_calibration		= -1;
 	_calibrationPasses	= 0;
 	_isCalibrating		= true;
+	_useCalibration		= false;
 	}
 
 /******************************************************************************\
@@ -312,8 +313,7 @@ void MsgIO::_stopCalibration(void)
 		else
 			ERR << "Cannot open" << file << "for output";
 
-		dmgr.release(_calibration);
-		_calibration	= -1;
+		_useCalibration = true;
 		_isCalibrating	= false;
 		}
 	else
