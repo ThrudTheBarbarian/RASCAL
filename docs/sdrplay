@@ -1,0 +1,25 @@
+w installed and ready for use.
+
+This API is released in Open Beta
+
+Command line applications (use in a Terminal Window)
+
+SoapySDRUtil --info
+will show the drivers installed
+
+SoapySDRUtil --find="driver=sdrplay"
+will display found RSP devices
+
+SoapySDRUtil --probe="driver=sdrplay"
+will display detailed information on the found RSP devices
+
+You shouldn't need to, but if you do need to manually restart the API service, type the following into a Terminal Window...
+
+sudo launchctl stop com.sdrplay.sdrplay_service
+
+The SoapySDRPlay library is still in development and not something SDRplay has developed.
+
+Any RSP/API related issues can be raised on our support system:
+https://www.sdrplay.com/support
+
+SDRplay

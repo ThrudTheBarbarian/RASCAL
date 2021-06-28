@@ -16,7 +16,7 @@ INCLUDEPATH += \
 
 macx {
 INCLUDEPATH += /usr/local/include/libusb-1.0 /usr/local/include
-LIBS += -L/usr/local/lib -lusb-1.0
+LIBS += -L/usr/local/lib -lusb-1.0 -lsdrplay_api
 }
 
 SOURCES += \
@@ -28,6 +28,7 @@ SOURCES += \
         classes/soapyworker.cc \
         classes/sourcemgr.cc \
         classes/sourcertlsdr.cc \
+        classes/sourcesdrplay.cc \
         classes/taskfft.cc \
         classes/tester.cc \
         main.cc \
@@ -58,6 +59,7 @@ HEADERS += \
     classes/sourcebase.h \
     classes/sourcemgr.h \
     classes/sourcertlsdr.h \
+    classes/sourcesdrplay.h \
     classes/taskfft.h \
     classes/tester.h \
     rtlsdr/reg_field.h \
