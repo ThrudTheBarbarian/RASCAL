@@ -1,3 +1,4 @@
+#include <unistd.h>
 
 #include <QCoreApplication>
 
@@ -114,7 +115,7 @@ SourceSdrPlay::SourceSdrPlay(QObject *parent)
 			  ,_params(nullptr)
 			  ,_bufId(-1)
 			  ,_antenna(_tuners[0])
-			  ,_sampleRate(0)
+			  ,_sampleRate(8000000)
 			  ,_frequency(DEFAULT_FREQUENCY)
 			  ,_bandwidth(_bandwidths[4])
 			  ,_gain(40)
@@ -147,7 +148,11 @@ SourceBase::StreamInfo SourceSdrPlay::streamInfo(void)
 \******************************************************************************/
 bool SourceSdrPlay::open(int deviceId)
 	{
-	bool ok = false;
+	/**************************************************************************\
+	|* If deviceID < 0. then we want the default device
+	\**************************************************************************/
+	if (deviceId < 0)
+		deviceId = 0;
 
 	/**************************************************************************\
 	|* Check that we can open the API
@@ -211,7 +216,6 @@ bool SourceSdrPlay::open(int deviceId)
 		sdrplay_api_Close();
 		return false;
 		}
-
 	/**************************************************************************\
 	|* If we've not asked for a device in range, return false
 	\**************************************************************************/
@@ -303,8 +307,8 @@ bool SourceSdrPlay::open(int deviceId)
 		\**********************************************************************/
 		if (_antenna == _tuners[MASTER_SLAVE])
 			{
-			// Change from default Fs  to 8MHz
-			_params->devParams->fsFreq.fsHz = 8000000.0;
+			// Change from default Fs  to _sampleRate
+			_params->devParams->fsFreq.fsHz = _sampleRate;
 			}
 		}
 
@@ -337,7 +341,182 @@ bool SourceSdrPlay::open(int deviceId)
 	_cbfns.StreamACbFn = StreamACallback;
 	_cbfns.StreamBCbFn = StreamBCallback;
 	_cbfns.EventCbFn = EventCallback;
-	return ok;
+	return true;
+	}
+
+
+/******************************************************************************\
+|* Set the sample rate
+\******************************************************************************/
+bool SourceSdrPlay::setSampleRate(int freqInHz)
+	{
+	_sampleRate = freqInHz;
+	return _isActive ? false : true;
+	}
+
+/******************************************************************************\
+|* Set the center-frequency
+\******************************************************************************/
+bool SourceSdrPlay::setFrequency(int freqInHz)
+	{
+	_frequency = freqInHz;
+	return _isActive ? false : true;
+	}
+
+/******************************************************************************\
+|* Set the gain in dB
+\******************************************************************************/
+bool SourceSdrPlay::setGain(double gain)
+	{
+	_gain = gain;
+	return _isActive ? false : true;
+	}
+
+/******************************************************************************\
+|* Set the antenna to use
+\******************************************************************************/
+bool SourceSdrPlay::setAntenna(QString antenna)
+	{
+	for (int i=0; i<MAX_TUNERS; i++)
+		if (antenna == _tuners[i])
+			{
+			_antenna = antenna;
+			return _isActive ? false : true;
+			}
+	return false;
+	}
+
+/******************************************************************************\
+|* Set the tuner bandwidth to use
+\******************************************************************************/
+bool SourceSdrPlay::setBandwidth(int bandwidth)
+	{
+	for (int i=0; i<MAX_BANDWIDTHS; i++)
+		if (bandwidth == (int)(_bandwidths[i]))
+			{
+			_bandwidth = bandwidth;
+			return _isActive ? false : true;
+			}
+	return false;
+	}
+
+
+/******************************************************************************\
+|* Get a list of the available antennas
+\******************************************************************************/
+QList<QString> SourceSdrPlay::listAntennas(void)
+	{
+	QList<QString> list;
+	for (int i=0; i<MAX_TUNERS; i++)
+		list.append(_tuners[i]);
+	return list;
+	}
+
+/******************************************************************************\
+|* Get a list of available bandwidth settings
+\******************************************************************************/
+QList<QString> SourceSdrPlay::listBandwidths(void)
+	{
+	QList<QString> list;
+	for (int i=0; i<MAX_BANDWIDTHS; i++)
+		list.append(QString("%1").arg(_bandwidths[i]));
+	return list;
+	}
+
+/******************************************************************************\
+|* Get the number of available channels for RX and TX
+\******************************************************************************/
+SourceBase::ChannelInfo SourceSdrPlay::numberOfChannels(void)
+	{
+	SourceBase::ChannelInfo info;
+	info.rx = 2;
+	info.tx = 0;
+	return info;
+	}
+
+/******************************************************************************\
+|* Get a list of frequency ranges, in Hz
+\******************************************************************************/
+QList<SourceBase::Range> SourceSdrPlay::listFrequencyRanges(void)
+	{
+	QList<SourceBase::Range> list;
+	list.append({.from=.01, .to=2000});
+	return list;
+	}
+
+/******************************************************************************\
+|* Get a list of available gains, in dB
+\******************************************************************************/
+QList<double> SourceSdrPlay::listGains(void)
+	{
+	QList<double> list;
+
+	for (int i=0; i<48; i++)
+		list.append(i);
+	return list;
+	}
+
+/******************************************************************************\
+|* Get the ranges within which you can sample via the ADC
+\******************************************************************************/
+QList<SourceBase::Range> SourceSdrPlay::listSampleRateRanges(void)
+	{
+	QList<SourceBase::Range> list;
+	list.append({.from=0.0625, .to=0.0625});
+	list.append({.from=0.125, .to=0.125});
+	list.append({.from=0.25, .to=0.25});
+	list.append({.from=0.5, .to=0.5});
+	list.append({.from=1, .to=1});
+	list.append({.from=6, .to=6});
+	list.append({.from=7, .to=7});
+	list.append({.from=8, .to=9});
+	list.append({.from=9, .to=9});
+	list.append({.from=10, .to=10});
+
+	return list;
+	}
+
+
+/******************************************************************************\
+|* Start sampling
+\******************************************************************************/
+void SourceSdrPlay::startSampling(void)
+	{
+	sdrplay_api_ErrT err = sdrplay_api_Init(_dev->dev, &_cbfns, nullptr);
+	if (err != sdrplay_api_Success)
+		{
+		ERR << "api_init() failed. Should only happen to slave!";
+		sdrplay_api_Close();
+		}
+	else
+		{
+		_isActive = true;
+		while (_isActive)
+			{
+			::sleep(1);
+			}
+		}
+
+	/**************************************************************************\
+	|* We're shutting down
+	\**************************************************************************/
+	err = sdrplay_api_Uninit(_dev->dev);
+	if (err != sdrplay_api_Success)
+		{
+		// Should handle slave closing down here
+		}
+	sdrplay_api_ReleaseDevice(_dev);
+	sdrplay_api_UnlockDeviceApi();
+	sdrplay_api_Close();
+	}
+
+
+/******************************************************************************\
+|* Stop sampling
+\******************************************************************************/
+void SourceSdrPlay::stopSampling(void)
+	{
+	_isActive = false;
 	}
 
 
@@ -350,11 +529,20 @@ void SourceSdrPlay::streamA(short *xi,
 							unsigned int numSamples,
 							unsigned int reset)
 	{
-	Q_UNUSED(xi);
-	Q_UNUSED(xq);
 	Q_UNUSED(params);
-	Q_UNUSED(numSamples);
 	Q_UNUSED(reset);
+
+	DataMgr &dmgr	= DataMgr::instance();
+	int64_t bufId	= dmgr.blockFor(numSamples*4);
+	int16_t *data	= dmgr.asInt16(bufId);
+
+	for (unsigned int i=0; i<numSamples; i++)
+		{
+		*data ++ = *xi++;
+		*data ++ = *xq++;
+		}
+
+	emit dataAvailable(bufId, numSamples, 32768, STREAM_S16C);
 	}
 
 /******************************************************************************\
@@ -366,11 +554,20 @@ void SourceSdrPlay::streamB(short *xi,
 							unsigned int numSamples,
 							unsigned int reset)
 	{
-	Q_UNUSED(xi);
-	Q_UNUSED(xq);
 	Q_UNUSED(params);
-	Q_UNUSED(numSamples);
 	Q_UNUSED(reset);
+
+	DataMgr &dmgr	= DataMgr::instance();
+	int64_t bufId	= dmgr.blockFor(numSamples*4);
+	int16_t *data	= dmgr.asInt16(bufId);
+
+	for (unsigned int i=0; i<numSamples; i++)
+		{
+		*data ++ = *xi++;
+		*data ++ = *xq++;
+		}
+
+	emit dataAvailable(bufId, numSamples, 32768, STREAM_S16C);
 	}
 
 /******************************************************************************\

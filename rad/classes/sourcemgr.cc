@@ -6,6 +6,7 @@
 #include "sourcebase.h"
 #include "sourcemgr.h"
 #include "sourcertlsdr.h"
+#include "sourcesdrplay.h"
 
 /******************************************************************************\
 |* Categorised logging support
@@ -153,8 +154,8 @@ void SourceMgr::_findMatchingSource(void)
 	|* Create instances of all the sources we know about
 	\**************************************************************************/
 	QList<SourceBase *> srcs;
-	SourceRtlSdr *rtlsdr = new SourceRtlSdr();
-	srcs.append(rtlsdr);
+	srcs.append(new SourceRtlSdr());
+	srcs.append(new SourceSdrPlay());
 
 	/**************************************************************************\
 	|* Find the first entry in the list that matches the criteria
