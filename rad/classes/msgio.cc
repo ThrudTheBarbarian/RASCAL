@@ -249,6 +249,7 @@ void MsgIO::_beginCalibration(void)
 	_calibrationPasses	= 0;
 	_isCalibrating		= true;
 	_useCalibration		= false;
+	_calNum				= 0;
 	}
 
 /******************************************************************************\
@@ -298,13 +299,13 @@ void MsgIO::_stopCalibration(void)
 		QString appDir	= Config::instance().saveDir();
 		QString file	= appDir + CALIBRATION_FILE;
 
-		double * data  = dmgr.asDouble(_calibration);
-		int extent	  = dmgr.extent(_calibration);
+		double * data	= dmgr.asDouble(_calibration);
+		int extent		= dmgr.extent(_calibration);
+		int num			= extent / sizeof(double);
 
 		FILE *fp = fopen(qPrintable(file), "wb");
 		if (fp != nullptr)
 			{
-			int num = extent / sizeof(double);
 			float vals[num];
 			for (int i=0; i<num; i++)
 				vals[i] = data[i] / _calibrationPasses;
@@ -316,6 +317,7 @@ void MsgIO::_stopCalibration(void)
 
 		_useCalibration = true;
 		_isCalibrating	= false;
+		_calNum			= num;
 		}
 	else
 		ERR << "Cannot save non-existent calibration data!";
