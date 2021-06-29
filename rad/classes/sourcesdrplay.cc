@@ -482,6 +482,8 @@ QList<SourceBase::Range> SourceSdrPlay::listSampleRateRanges(void)
 \******************************************************************************/
 void SourceSdrPlay::startSampling(void)
 	{
+	LOG << "Start sampling";
+
 	sdrplay_api_ErrT err = sdrplay_api_Init(_dev->dev, &_cbfns, nullptr);
 	if (err != sdrplay_api_Success)
 		{
@@ -542,7 +544,7 @@ void SourceSdrPlay::streamA(short *xi,
 		*data ++ = *xq++;
 		}
 
-	emit dataAvailable(bufId, numSamples, 32768, STREAM_S16C);
+	emit dataAvailable(bufId, numSamples, 8192, STREAM_S16C);
 	}
 
 /******************************************************************************\
@@ -567,7 +569,7 @@ void SourceSdrPlay::streamB(short *xi,
 		*data ++ = *xq++;
 		}
 
-	emit dataAvailable(bufId, numSamples, 32768, STREAM_S16C);
+	emit dataAvailable(bufId, numSamples, 8192, STREAM_S16C);
 	}
 
 /******************************************************************************\

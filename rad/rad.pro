@@ -12,7 +12,8 @@ INCLUDEPATH += \
             ../ibra \
             ../rtlsdr \
             classes \
-            /usr/local/include
+            /usr/local/include \
+            /usr/include/libusb-1.0
 
 macx {
 INCLUDEPATH += /usr/local/include/libusb-1.0 /usr/local/include
@@ -42,7 +43,11 @@ SOURCES += \
 LIBS += \
         -L/usr/local/lib \
         -lfftw3 \
-		-lSoapySDR \
+        -lSoapySDR \
+        -lsdrplay_api \
+        -lrtlsdr \
+        -lusb-1.0
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

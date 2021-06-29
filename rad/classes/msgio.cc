@@ -183,6 +183,7 @@ void MsgIO::sendBinaryMessage(const QByteArray &data)
 \******************************************************************************/
 void MsgIO::newData(PreambleType type, int64_t bufferId)
 	{
+	LOG << "data:" << type << "buffer:"<< bufferId;
 	QMutexLocker guard(&_lock);
 	DataMgr &dmgr	= DataMgr::instance();
 
