@@ -132,13 +132,8 @@ void Waterfall::updateReceived(int64_t idx)
 	/**************************************************************************\
 	|* Update the min/max range to include this data
 	\**************************************************************************/\
-	int center = num/2;
 	for (int i=_binLo; i<_binHi; i++)
 		{
-		// Ignore the DC peak
-		if ((i >= center-1) && (i <= center+1))
-			continue;
-
 		_updateMax = (_updateMax > data[i]) ? _updateMax : data[i];
 		_updateMin = (_updateMin < data[i]) ? _updateMin : data[i];
 		}
@@ -190,13 +185,8 @@ void Waterfall::sampleReceived(int64_t idx)
 	/**************************************************************************\
 	|* Update the min/max range to include this data
 	\**************************************************************************/\
-	int center = num/2;
 	for (int i=_binLo; i<_binHi; i++)
 		{
-		// Ignore the DC peak
-		if ((i >= center-1) && (i <= center+1))
-			continue;
-
 		_sampleMax = (_sampleMax > data[i]) ? _sampleMax : data[i];
 		_sampleMin = (_sampleMin < data[i]) ? _sampleMin : data[i];
 		}
